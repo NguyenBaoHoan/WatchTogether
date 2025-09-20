@@ -51,7 +51,6 @@ public class RoomService {
                 && !request.getDisplayName().isEmpty())
                         ? request.getDisplayName()
                         : "Host";
-
         Participant host = Participant.builder()
                 .id(hostId)
                 .roomId(roomId)
