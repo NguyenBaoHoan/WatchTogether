@@ -4,7 +4,7 @@ import com.watchtogether.Repository.jpa.ParticipantRepository;
 import com.watchtogether.Repository.redis.RoomRedisRepository;
 import com.watchtogether.DTO.Request.ReqCreateRoom;
 import com.watchtogether.DTO.Response.ResCreateRoom;
-import com.watchtogether.Entity.Participant;
+import com.watchtogether.Entity.jpa.Participant;
 import com.watchtogether.Entity.redis.Room;
 
 import lombok.RequiredArgsConstructor;

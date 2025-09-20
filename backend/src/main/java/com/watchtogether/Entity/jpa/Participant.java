@@ -1,4 +1,4 @@
-    package com.watchtogether.Entity;
+    package com.watchtogether.Entity.jpa;
 
     import jakarta.persistence.Entity;
     import jakarta.persistence.Id;
