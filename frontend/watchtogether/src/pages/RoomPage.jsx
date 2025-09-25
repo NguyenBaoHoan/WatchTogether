@@ -1,38 +1,43 @@
-// src/pages/RoomPage.jsx
 import React, { useState } from 'react';
-import { useRoom } from '../hooks/useRoom'; // Sử dụng hook
-import InviteModal from '../components/features/InviteModal'; // Import Modal
+import { useRoom } from '../hooks/useRoom';
+
+// Import các component layout và feature
+import InviteModal from '../components/features/InviteModal';
+import LeftSidebar from '../components/layout/LeftSidebar';
+import MainContent from '../components/layout/MainContent';
+import RightSidebar from '../components/layout/RightSidebar';
+import RoomHeader from '../components/layout/RoomHeader';
 
 function RoomPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const { roomData } = useRoom(); // Lấy dữ liệu phòng từ context
+    const { roomData } = useRoom();
 
-    // Nếu không có roomData (trường hợp truy cập thẳng vào trang)
     if (!roomData) {
-        return <div>Loading room...</div>;
+        // Có thể thay thế bằng một component loading đẹp hơn sau này
+        return <div className="bg-[#1e1e24] min-h-screen flex items-center justify-center text-white">Loading room...</div>;
     }
 
     return (
-        <div className="bg-[#1e1e24] min-h-screen text-white flex">
-            {/* Sidebar trái */}
-            <aside className="w-20 bg-[#2c2c34] p-2 flex flex-col items-center space-y-6">
-                <div className="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center font-bold text-black text-2xl">W</div>
-                <button
-                    title="Invite friends"
-                    onClick={() => setIsModalOpen(true)}
-                    className="p-3 rounded-lg hover:bg-gray-700 transition-colors"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>
-                </button>
-            </aside>
+        <div className="bg-[#1e1e24] h-screen text-white flex flex-col font-sans">
+            {/* Phần Header trên cùng */}
+            <RoomHeader />
 
-            {/* Main content... */}
-            <main className="flex-1 p-4">
-                {/* ... Giao diện phòng xem phim của bạn ... */}
-                <h1 className="text-2xl">Welcome to Room: {roomData.roomId}</h1>
-            </main>
+            {/* Phần thân chính của trang, sử dụng flex để chia cột */}
+            <div className="flex flex-1 overflow-hidden">
+                {/* - Cột 1: Sidebar trái.
+                  - `onInviteClick` là một prop được truyền xuống để LeftSidebar có thể
+                    ra lệnh cho RoomPage mở Modal. Đây là cách giao tiếp từ con lên cha.
+                */}
+                <LeftSidebar onInviteClick={() => setIsModalOpen(true)} />
 
-            {/* Modal */}
+                {/* Cột 2: Nội dung chính ở giữa */}
+                <MainContent />
+
+                {/* Cột 3: Sidebar phải */}
+                <RightSidebar />
+            </div>
+
+            {/* Modal mời bạn bè, nằm ngoài layout chính để có thể che phủ toàn màn hình */}
             <InviteModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
