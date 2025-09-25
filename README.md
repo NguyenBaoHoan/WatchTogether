@@ -1,57 +1,75 @@
-🎬 WatchTogether (WIP)
+# 🎬 WatchTogether (WIP)
 
-WatchTogether is an application that allows people to watch movies together in real time, with features for video synchronization, room management, and live chat.
-The project is currently under development.
+<p align="center">
+  <img src="https://img.shields.io/badge/Java-21-red?style=for-the-badge&logo=openjdk" />
+  <img src="https://img.shields.io/badge/SpringBoot-3-brightgreen?style=for-the-badge&logo=springboot" />
+  <img src="https://img.shields.io/badge/PostgreSQL-DB-blue?style=for-the-badge&logo=postgresql" />
+  <img src="https://img.shields.io/badge/Redis-Cache-red?style=for-the-badge&logo=redis" />
+  <img src="https://img.shields.io/badge/React-19-blue?style=for-the-badge&logo=react" />
+  <img src="https://img.shields.io/badge/Vite-7-purple?style=for-the-badge&logo=vite" />
+  <img src="https://img.shields.io/badge/TailwindCSS-4-38bdf8?style=for-the-badge&logo=tailwindcss" />
+</p>
 
-🚀 Tech Stack
-Backend
+<p align="center">
+  <b>Watch movies together in real-time — create a room, invite friends, sync playback, and chat live.</b>
+</p>
 
-Java 21 + Spring Boot 3
+---
 
-Spring Security (JWT Authentication)
+## 🚀 Tech Stack
 
-Spring Data JPA + PostgreSQL
+### 🖥 Backend
+- **Java 21** + **Spring Boot 3**
+- **Spring Security** (JWT Authentication)
+- **Spring Data JPA** + **PostgreSQL**
+- **Redis** (temporary room storage, TTL)
+- **WebSocket** (coming soon, for video sync & chat)
+- **JWT (jjwt)**
 
-Redis (temporary room storage, TTL)
+### 🎨 Frontend
+- **React 19** + **Vite 7**
+- **Tailwind CSS 4** (Vite plugin)
 
-WebSocket (coming soon, for video sync & chat)
+---
 
-JWT (jjwt)
+## ✨ Features
 
-Frontend
+### ✅ Current
+- 🏠 **Create a shared room** (`POST /rooms`) → returns:
+  - `roomId`, `inviteCode`, `accessToken`, `joinUrl`, `wsUrl`
+- 🗃️ **Store temporary rooms** in **Redis** (TTL 24h)
+- 👤 **Save Host (participant)** into **PostgreSQL**
+- 🔑 **JWT** for authenticating actions
+- 🔍 **Test endpoints**:
+  - `GET /hello` → test API
+  - `GET /db-check` → test DB connection
 
-React 19 + Vite 7
+### 🔮 Upcoming
+- 🔗 Join room using `inviteCode`
+- 🎥 Sync playback state (play/pause/seek) via **WebSocket**
+- 👥 Manage **participants** (host/guest roles)
+- 💬 In-room chat
+- 🎨 Full UI/UX for shared watching experience
 
-Tailwind CSS 4 (plugin for Vite)
+---
 
-✨ Current Features
+## 📂 Project Structure
 
-🏠 Create a shared room (POST /rooms) → returns:
+```bash
+WatchTogether/
+├── backend/        # Spring Boot (API, DB, Redis, JWT, WebSocket)
+│   ├── src/main/java/com/watchtogether/
+│   └── src/main/resources/
+└── frontend/       # React + Vite + Tailwind (UI)
+    ├── src/
+    └── public/
+🤝 Contributing
 
-roomId, inviteCode, accessToken, joinUrl, wsUrl
+Contributions are welcome!
+Feel free to fork, open issues, or submit PRs.
 
-🗃️ Store temporary rooms in Redis (TTL 24h)
+📜 License
 
-👤 Save Host (participant) into PostgreSQL
+This project is licensed under the MIT License.
 
-🔑 JWT for authenticating subsequent actions
-
-🔍 Test endpoints:
-
-GET /hello → test API
-
-GET /db-check → test DB connection
-
-🛠️ Planned Features
-
-🔗 Join a room using inviteCode
-
-🎥 Synchronize video playback state (play/pause/seek) via WebSocket
-
-👥 Manage participants list, with host/guest roles
-
-💬 Simple in-room chat
-
-🎨 Full UI/UX for room creation & shared watching experience
-
-📂 Main Project Structure
+<p align="center">Made with ❤️ by <a href="https://github.com/NguyenBaoHoan">Nguyen Bao Hoan</a></p> ```
