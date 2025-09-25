@@ -1,46 +1,57 @@
-# 🎬 WatchTogether (WIP)
+🎬 WatchTogether (WIP)
 
-**WatchTogether** là một ứng dụng giúp mọi người có thể **xem phim cùng nhau theo thời gian thực**, với tính năng đồng bộ phát video, quản lý phòng, và trò chuyện trực tiếp.  
-Dự án hiện đang trong quá trình phát triển.
+WatchTogether is an application that allows people to watch movies together in real time, with features for video synchronization, room management, and live chat.
+The project is currently under development.
 
----
+🚀 Tech Stack
+Backend
 
-## 🚀 Tech Stack
+Java 21 + Spring Boot 3
 
-### Backend
-- **Java 21** + **Spring Boot 3**
-- **Spring Security** (JWT Authentication)
-- **Spring Data JPA** + **PostgreSQL**
-- **Redis** (lưu trữ phòng tạm thời, TTL)
-- **WebSocket** (đang chuẩn bị, cho đồng bộ phát video & chat)
-- **JWT (jjwt)**
+Spring Security (JWT Authentication)
 
-### Frontend
-- **React 19** + **Vite 7**
-- **Tailwind CSS 4** (plugin cho Vite)
+Spring Data JPA + PostgreSQL
 
----
+Redis (temporary room storage, TTL)
 
-## ✨ Tính năng hiện có
-- 🏠 **Tạo phòng xem chung** (`POST /rooms`) → trả về:
-  - `roomId`, `inviteCode`, `accessToken`, `joinUrl`, `wsUrl`
-- 🗃️ **Lưu phòng tạm thời** trên **Redis** (TTL 24h)
-- 👤 **Lưu Host (participant)** vào **PostgreSQL**
-- 🔑 **JWT** để xác thực các hành động sau
-- 🔍 Endpoint kiểm tra:
-  - `GET /hello` → test API
-  - `GET /db-check` → test kết nối DB
+WebSocket (coming soon, for video sync & chat)
 
----
+JWT (jjwt)
 
-## 🛠️ Tính năng dự kiến
-- 🔗 Tham gia phòng bằng `inviteCode`
-- 🎥 Đồng bộ trạng thái phát video (play/pause/seek) qua **WebSocket**
-- 👥 Quản lý danh sách **participants**, phân quyền host/guest
-- 💬 Chat ngắn gọn trong phòng
-- 🎨 UI/UX hoàn chỉnh cho tạo phòng & trải nghiệm xem chung
+Frontend
 
----
+React 19 + Vite 7
 
-## 📂 Cấu trúc thư mục chính
+Tailwind CSS 4 (plugin for Vite)
 
+✨ Current Features
+
+🏠 Create a shared room (POST /rooms) → returns:
+
+roomId, inviteCode, accessToken, joinUrl, wsUrl
+
+🗃️ Store temporary rooms in Redis (TTL 24h)
+
+👤 Save Host (participant) into PostgreSQL
+
+🔑 JWT for authenticating subsequent actions
+
+🔍 Test endpoints:
+
+GET /hello → test API
+
+GET /db-check → test DB connection
+
+🛠️ Planned Features
+
+🔗 Join a room using inviteCode
+
+🎥 Synchronize video playback state (play/pause/seek) via WebSocket
+
+👥 Manage participants list, with host/guest roles
+
+💬 Simple in-room chat
+
+🎨 Full UI/UX for room creation & shared watching experience
+
+📂 Main Project Structure
