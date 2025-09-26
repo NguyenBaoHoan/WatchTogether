@@ -1,46 +1,75 @@
 # 🎬 WatchTogether (WIP)
 
-**WatchTogether** là một ứng dụng giúp mọi người có thể **xem phim cùng nhau theo thời gian thực**, với tính năng đồng bộ phát video, quản lý phòng, và trò chuyện trực tiếp.  
-Dự án hiện đang trong quá trình phát triển.
+<p align="center">
+  <img src="https://img.shields.io/badge/Java-21-red?style=for-the-badge&logo=openjdk" />
+  <img src="https://img.shields.io/badge/SpringBoot-3-brightgreen?style=for-the-badge&logo=springboot" />
+  <img src="https://img.shields.io/badge/PostgreSQL-DB-blue?style=for-the-badge&logo=postgresql" />
+  <img src="https://img.shields.io/badge/Redis-Cache-red?style=for-the-badge&logo=redis" />
+  <img src="https://img.shields.io/badge/React-19-blue?style=for-the-badge&logo=react" />
+  <img src="https://img.shields.io/badge/Vite-7-purple?style=for-the-badge&logo=vite" />
+  <img src="https://img.shields.io/badge/TailwindCSS-4-38bdf8?style=for-the-badge&logo=tailwindcss" />
+</p>
+
+<p align="center">
+  <b>Watch movies together in real-time — create a room, invite friends, sync playback, and chat live.</b>
+</p>
 
 ---
 
 ## 🚀 Tech Stack
 
-### Backend
+### 🖥 Backend
 - **Java 21** + **Spring Boot 3**
 - **Spring Security** (JWT Authentication)
 - **Spring Data JPA** + **PostgreSQL**
-- **Redis** (lưu trữ phòng tạm thời, TTL)
-- **WebSocket** (đang chuẩn bị, cho đồng bộ phát video & chat)
+- **Redis** (temporary room storage, TTL)
+- **WebSocket** (coming soon, for video sync & chat)
 - **JWT (jjwt)**
 
-### Frontend
+### 🎨 Frontend
 - **React 19** + **Vite 7**
-- **Tailwind CSS 4** (plugin cho Vite)
+- **Tailwind CSS 4** (Vite plugin)
 
 ---
 
-## ✨ Tính năng hiện có
-- 🏠 **Tạo phòng xem chung** (`POST /rooms`) → trả về:
+## ✨ Features
+
+### ✅ Current
+- 🏠 **Create a shared room** (`POST /rooms`) → returns:
   - `roomId`, `inviteCode`, `accessToken`, `joinUrl`, `wsUrl`
-- 🗃️ **Lưu phòng tạm thời** trên **Redis** (TTL 24h)
-- 👤 **Lưu Host (participant)** vào **PostgreSQL**
-- 🔑 **JWT** để xác thực các hành động sau
-- 🔍 Endpoint kiểm tra:
+- 🗃️ **Store temporary rooms** in **Redis** (TTL 24h)
+- 👤 **Save Host (participant)** into **PostgreSQL**
+- 🔑 **JWT** for authenticating actions
+- 🔍 **Test endpoints**:
   - `GET /hello` → test API
-  - `GET /db-check` → test kết nối DB
+  - `GET /db-check` → test DB connection
+
+### 🔮 Upcoming
+- 🔗 Join room using `inviteCode`
+- 🎥 Sync playback state (play/pause/seek) via **WebSocket**
+- 👥 Manage **participants** (host/guest roles)
+- 💬 In-room chat
+- 🎨 Full UI/UX for shared watching experience
 
 ---
 
-## 🛠️ Tính năng dự kiến
-- 🔗 Tham gia phòng bằng `inviteCode`
-- 🎥 Đồng bộ trạng thái phát video (play/pause/seek) qua **WebSocket**
-- 👥 Quản lý danh sách **participants**, phân quyền host/guest
-- 💬 Chat ngắn gọn trong phòng
-- 🎨 UI/UX hoàn chỉnh cho tạo phòng & trải nghiệm xem chung
+## 📂 Project Structure
 
----
+```bash
+WatchTogether/
+├── backend/        # Spring Boot (API, DB, Redis, JWT, WebSocket)
+│   ├── src/main/java/com/watchtogether/
+│   └── src/main/resources/
+└── frontend/       # React + Vite + Tailwind (UI)
+    ├── src/
+    └── public/
+🤝 Contributing
 
-## 📂 Cấu trúc thư mục chính
+Contributions are welcome!
+Feel free to fork, open issues, or submit PRs.
 
+📜 License
+
+This project is licensed under the MIT License.
+
+<p align="center">Made with ❤️ by <a href="https://github.com/NguyenBaoHoan">Nguyen Bao Hoan</a></p> ```
