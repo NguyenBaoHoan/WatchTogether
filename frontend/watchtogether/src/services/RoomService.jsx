@@ -17,3 +17,24 @@ export const createRoom = async () => {
         throw error;
     }
 };
+
+
+
+export const joinRoom = async (roomId, body = {}) => {
+    try {
+        const response = await fetch(`http://localhost:8080/api/rooms/${roomId}/join`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body),
+        });
+        if(!response.ok) {
+            throw new Error('HTTP error ' + response.status);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error joining room:', error);
+        throw error;
+    }
+};

@@ -8,14 +8,19 @@ import MainContent from '../components/layout/MainContent';
 import RightSidebar from '../components/layout/RightSidebar';
 import RoomHeader from '../components/layout/RoomHeader';
 
-function RoomPage() {
+function RoomPage({ roomDataOverride }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const { roomData } = useRoom();
+    const data = roomDataOverride || roomData;
 
-    if (!roomData) {
+    if (!data) {
         // Có thể thay thế bằng một component loading đẹp hơn sau này
         return <div className="bg-[#1e1e24] min-h-screen flex items-center justify-center text-white">Loading room...</div>;
     }
+
+    const computedJoinUrl = (typeof window !== 'undefined' && data?.roomId)
+        ? `${window.location.origin}/room/${data.roomId}`
+        : data.joinUrl;
 
     return (
         <div className="bg-[#1e1e24] h-screen text-white flex flex-col font-sans">
@@ -41,7 +46,7 @@ function RoomPage() {
             <InviteModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                joinUrl={roomData.joinUrl}
+                joinUrl={computedJoinUrl}
             />
         </div>
     );
