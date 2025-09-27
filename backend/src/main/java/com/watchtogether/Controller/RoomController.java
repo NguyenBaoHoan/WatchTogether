@@ -2,7 +2,10 @@ package com.watchtogether.Controller;
 
 import com.watchtogether.Service.RoomService;
 import com.watchtogether.DTO.Request.ReqCreateRoom;
+import com.watchtogether.DTO.Request.ReqJoinRoom;
 import com.watchtogether.DTO.Response.ResCreateRoom;
+import com.watchtogether.DTO.Response.ResJoinRoom;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,4 +28,11 @@ public class RoomController {
     }
 
     // (Sau này bạn sẽ thêm các API khác ở đây, ví dụ: join room)
+
+    @PostMapping("/{roomId}/join")
+    public ResponseEntity<ResJoinRoom> joinRoom(@PathVariable String roomId,
+                                                @RequestBody(required = false) ReqJoinRoom request)
+    {
+        return ResponseEntity.ok(roomService.joinRoom(roomId, request));
+    }
 }
