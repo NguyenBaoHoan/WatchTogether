@@ -38,3 +38,21 @@ export const joinRoom = async (roomId, body = {}) => {
         throw error;
     }
 };
+
+export const getParticipants = async (roomId) => {
+    try {
+        const response = await fetch(`http://localhost:8080/api/rooms/${roomId}/participants`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        if(!response.ok) {
+            throw new Error('HTTP error ' + response.status);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching participants:', error);
+        throw error;
+    }
+};

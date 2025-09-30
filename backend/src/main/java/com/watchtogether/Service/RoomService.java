@@ -6,6 +6,7 @@ import com.watchtogether.DTO.Request.ReqCreateRoom;
 import com.watchtogether.DTO.Request.ReqJoinRoom;
 import com.watchtogether.DTO.Response.ResCreateRoom;
 import com.watchtogether.DTO.Response.ResJoinRoom;
+import com.watchtogether.DTO.Response.ResParticipant;
 import com.watchtogether.Entity.jpa.Participant;
 import com.watchtogether.Entity.redis.Room;
 
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -111,5 +113,19 @@ public class RoomService {
                                 .accessToken(accessToken)
                                 .wsUrl(wsUrl)
                                 .build();
+        }
+
+        @Transactional
+        public List<ResParticipant> getParticipants(String roomId){
+                List<Participant> participants = participantRepository.findByRoomId(roomId);
+                return participants.stream()
+                .map(p -> ResParticipant.builder()
+                        .id(p.getId())
+                        .displayName(p.getDisplayName())
+                        .role(p.getRole())
+                        .joinedAt(p.getJoinedAt())
+                        .isOnline(true) // for now, assume all are online
+                        .build())
+                .collect(Collectors.toList());
         }
 }

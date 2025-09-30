@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import RoomPage from './RoomPage';
 import { joinRoom } from '../services/RoomService';
+import {useRoom} from '../hooks/useRoom';
 
 export default function RoomRoute() {
   const { roomId } = useParams();
+  const {setRoomData, fetchParticipants} = useRoom();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -15,6 +17,8 @@ export default function RoomRoute() {
       try {
         const res = await joinRoom(roomId, { displayName: 'Guest' });
         if (!cancelled) setData(res);
+        setRoomData({...res, roomId});
+        fetchParticipants(roomId);
       } catch (e) {
         if (!cancelled) setError(e?.message || 'Failed to join room');
       } finally {

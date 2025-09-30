@@ -1,14 +1,27 @@
 import React, { useState } from 'react';
-import { ChevronDown, List, Shuffle, Heart, Search, SkipForward, Settings } from 'lucide-react';
+import { ChevronDown, List, Shuffle, Heart, Search, SkipForward, Settings, Users } from 'lucide-react';
+import ParticipantList from '../features/ParticipantList';
 
 const RightSidebar = () => {
-    const [activeTab, setActiveTab] = useState('Playlists');
+    const [activeTab, setActiveTab] = useState('Participants');
 
     return (
         <aside className="w-80 bg-[#3a3a46] flex flex-col h-full">
             {/* Header với tabs */}
             <div className="border-b border-gray-600">
                 <div className="flex">
+                    <button
+                        onClick={() => setActiveTab('Participants')}
+                        className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'Participants'
+                                ? 'text-blue-400 border-blue-400'
+                                : 'text-gray-400 border-transparent hover:text-white'
+                            }`}
+                    >
+                        <div className="flex items-center justify-center space-x-2">
+                            <Users size={16} />
+                            <span>Participants</span>
+                        </div>
+                    </button>
                     <button
                         onClick={() => setActiveTab('Playlists')}
                         className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'Playlists'
@@ -18,17 +31,13 @@ const RightSidebar = () => {
                     >
                         Playlists
                     </button>
-                    <button
-                        onClick={() => setActiveTab('History')}
-                        className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'History'
-                                ? 'text-blue-400 border-blue-400'
-                                : 'text-gray-400 border-transparent hover:text-white'
-                            }`}
-                    >
-                        History
-                    </button>
                 </div>
             </div>
+
+            {/* Participants content */}
+            {activeTab === 'Participants' && (
+                <ParticipantList />
+            )}
 
             {/* Playlist content */}
             {activeTab === 'Playlists' && (
@@ -70,15 +79,6 @@ const RightSidebar = () => {
                     {/* Empty playlist message */}
                     <div className="text-center text-gray-400 mt-8">
                         <p>This playlist does not contain any items.</p>
-                    </div>
-                </div>
-            )}
-
-            {/* History content */}
-            {activeTab === 'History' && (
-                <div className="flex-1 p-4">
-                    <div className="text-center text-gray-400 mt-8">
-                        <p>No history available.</p>
                     </div>
                 </div>
             )}

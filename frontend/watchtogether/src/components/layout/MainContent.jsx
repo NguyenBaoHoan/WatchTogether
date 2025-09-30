@@ -1,7 +1,7 @@
 import React from 'react';
 import VideoPlayer from '../video/VideoPlayer';
 import VideoGrid from '../ui/VideoGrid';
-
+import SearchBar from '../features/SearchBar'
 const MainContent = () => {
     // Dữ liệu shorts giống như trong ảnh
     const shortsData = [
@@ -88,6 +88,11 @@ const MainContent = () => {
 
     return (
         <main className="flex-1 bg-[#1e1e1e] overflow-auto">
+            {/* Search Bar Section */}
+            <div className="p-6 border-b border-gray-700">
+                <SearchBar />
+            </div>
+            
             {/* Video Player Section */}
             <div className="p-6">
                 <VideoPlayer />

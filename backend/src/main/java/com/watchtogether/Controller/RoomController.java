@@ -5,11 +5,18 @@ import com.watchtogether.DTO.Request.ReqCreateRoom;
 import com.watchtogether.DTO.Request.ReqJoinRoom;
 import com.watchtogether.DTO.Response.ResCreateRoom;
 import com.watchtogether.DTO.Response.ResJoinRoom;
+import com.watchtogether.DTO.Response.ResParticipant;
 
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 @RestController
 @RequestMapping("/api/rooms") // Mọi request đến /api/rooms sẽ được xử lý bởi Controller này.
@@ -35,4 +42,10 @@ public class RoomController {
     {
         return ResponseEntity.ok(roomService.joinRoom(roomId, request));
     }
+
+    @GetMapping("{roomId}/participants")
+    public ResponseEntity<List<ResParticipant>> getParticipants(@PathVariable String roomId) {
+        return ResponseEntity.ok(roomService.getParticipants(roomId));
+    }
+    
 }
