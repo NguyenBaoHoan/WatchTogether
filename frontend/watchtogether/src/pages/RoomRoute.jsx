@@ -1,35 +1,48 @@
-import React, { useEffect, useState } from 'react';
+
+import React, { useEffect, useContext, useRef } from 'react';
 import { useParams } from 'react-router-dom';
+import { RoomContext } from '../context/RoomContext';
 import RoomPage from './RoomPage';
-import { joinRoom } from '../services/RoomService';
-import {useRoom} from '../hooks/useRoom';
 
 export default function RoomRoute() {
   const { roomId } = useParams();
-  const {setRoomData} = useRoom();
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { roomData, joinRoom, isLoading, error } = useContext(RoomContext);
+
+
+  // ⭐ PHẦN QUAN TRỌNG 7: Ref guard ở component gọi
+  const hasTriedJoinRef = useRef(false);
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await joinRoom(roomId, { displayName: 'Guest' });
-        if (!cancelled) setData(res);
-        setRoomData({...res, roomId});
-        
-      } catch (e) {
-        if (!cancelled) setError(e?.message || 'Failed to join room');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [roomId]);
+    
+    // ⭐ PHẦN QUAN TRỌNG 8: Kiểm tra trước khi gọi
+    if (!roomId || hasTriedJoinRef.current) return;
 
-  if (loading) return <div className="text-white p-8">Joining room…</div>;
-  if (error) return <div className="text-red-400 p-8">{error}</div>;
+    // ⭐ PHẦN QUAN TRỌNG 9: Đánh dấu đã thử join
+    hasTriedJoinRef.current = true;
+    joinRoom(roomId, { displayName: 'Guest' }).catch((err) => {
+      console.error('Join room error:', err);
+    });
+  }, [roomId, joinRoom]);
 
-  return <RoomPage roomDataOverride={{ ...data, roomId }} />;
-} 
+  if (isLoading && !roomData) {
+    return (
+      <div className="w-screen h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-black">
+        <div className="text-white text-xl">Joining room...</div>
+      </div>
+    );
+  }
+
+  if (error && !roomData) {
+    return (
+      <div className="w-screen h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-black">
+        <div className="text-red-400 text-xl">Failed to join: {String(error)}</div>
+      </div>
+    );
+  }
+
+  if (!roomData) {
+    return null;
+  }
+
+  return <RoomPage />;
+}

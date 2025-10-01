@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useEffect, useRef, useState } from 'react';
 import { RoomContext } from './RoomContext';
-import { createRoom as createRoomAPI, getParticipants } from '../services/RoomService';
-import { Client } from '@stomp/stompjs';
-import SockJS from 'sockjs-client/dist/sockjs';
+import {
+  createRoom as createRoomAPI,
+  joinRoom as joinRoomAPI,
+  getParticipants as getParticipantsAPI,
+} from '../services/RoomService';
 
 export default function RoomProvider({ children }) {
   const [roomData, setRoomData] = useState(null);
@@ -10,128 +13,114 @@ export default function RoomProvider({ children }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // ⭐ PHẦN QUAN TRỌNG 1: Khai báo 2 ref flags
+  const hasJoinedRef = useRef(false); // Đánh dấu đã join thành công
+  const isJoiningRef = useRef(false); // Đánh dấu đang trong quá trình join
+
   const createRoom = async () => {
     setIsLoading(true);
     setError(null);
     try {
       const data = await createRoomAPI();
       setRoomData(data);
-      // Note: fetchParticipants will be called by useEffect when roomData changes
+      return data;
     } catch (err) {
-      setError(err?.message || 'Unknown error');
+      setError(err?.message || 'Failed to create room');
+      throw err;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const fetchParticipants = async (roomId) => {
+  const joinRoom = async (roomId, payload) => {
+    // ⭐ PHẦN QUAN TRỌNG 2: Guard đầu tiên - Kiểm tra đã join
+    if (!roomId || hasJoinedRef.current) {
+      return roomData;
+    }
+
+    // ⭐ PHẦN QUAN TRỌNG 3: Guard thứ hai - Kiểm tra đang join
+    if (isJoiningRef.current) {
+      return new Promise((resolve) => {
+        const checkInterval = setInterval(() => {
+          if (hasJoinedRef.current) {
+            clearInterval(checkInterval);
+            resolve(roomData);
+          }
+        }, 50);
+      });
+    }
+    // ⭐ PHẦN QUAN TRỌNG 4: Đánh dấu đang join
+    isJoiningRef.current = true;
+    setIsLoading(true);
+    setError(null);
+// ⭐ PHẦN QUAN TRỌNG 5: Đánh dấu đã join thành công
     try {
-      console.log('Fetching participants for room:', roomId);
-      const participantsData = await getParticipants(roomId);
-      console.log('Fetched participants:', participantsData.length, 'participants');
-      setParticipants(participantsData || []);
+      const data = await joinRoomAPI(roomId, payload ?? { displayName: 'Guest' });
+      setRoomData(data);
+      hasJoinedRef.current = true; // ✅ Đánh dấu đã join
+      return data;
     } catch (err) {
-      console.error('Failed to fetch participants:', err);
-      setParticipants([]); // Reset to empty array on error
+      setError(err?.message || 'Failed to join room');
+      throw err;
+    } finally {
+      setIsLoading(false);
+      
+    // ⭐ PHẦN QUAN TRỌNG 6: Reset flag đang join
+      isJoiningRef.current = false;
     }
   };
 
-  // Function to refresh participants - useful for manual sync
+  const fetchParticipants = async (roomId) => {
+    try {
+      if (!roomId) return;
+      const list = await getParticipantsAPI(roomId);
+      setParticipants(Array.isArray(list) ? list : []);
+    } catch (err) {
+      console.error('Fetch participants error:', err);
+    }
+  };
+
   const refreshParticipants = async () => {
     if (roomData?.roomId) {
       await fetchParticipants(roomData.roomId);
     }
   };
 
-  // Auto-fetch participants when roomData changes and setup WebSocket
+  // ✅ Effect thiết lập WebSocket - chỉ chạy khi có roomId
   useEffect(() => {
     if (!roomData?.roomId) return;
 
-    let wsClient = null;
-    let timeoutId = null;
+    let retryTimeout;
 
-    // 1) Fetch initial participants first
-    const setupWebSocket = async () => {
-      await fetchParticipants(roomData.roomId);
-      
-      // 2) Setup WebSocket connection AFTER initial fetch completes
-      // Small delay to ensure fetch is fully processed and avoid race condition
-      timeoutId = setTimeout(() => {
-        const socket = new SockJS('http://localhost:8080/ws');
-        wsClient = new Client({
-          webSocketFactory: () => socket,
-          reconnectDelay: 3000,
-          debug: () => {},
-        });
-
-        wsClient.onConnect = () => {
-          console.log('WebSocket connected for room:', roomData.roomId);
-          
-          // Subscribe to room events
-          wsClient.subscribe(`/topic/rooms/${roomData.roomId}`, (msg) => {
-            try {
-              const { type, payload } = JSON.parse(msg.body);
-              console.log('Received WebSocket event:', type, payload);
-              
-              if (type === 'participant_joined') {
-                setParticipants(prev => {
-                  // Check if participant already exists to avoid duplicates
-                  const exists = prev.some(p => p.id === payload.id);
-                  if (exists) {
-                    console.log('Participant already exists, skipping:', payload.id);
-                    return prev;
-                  }
-                  console.log('Adding new participant:', payload.displayName);
-                  return [...prev, payload];
-                });
-              } else if (type === 'participant_left') {
-                setParticipants(prev => {
-                  const updated = prev.filter(p => p.id !== payload);
-                  console.log('Participant left, new count:', updated.length);
-                  return updated;
-                });
-              }
-            } catch (error) {
-              console.error('Error parsing WebSocket message:', error);
-            }
-          });
-        };
-
-        wsClient.onDisconnect = () => {
-          console.log('WebSocket disconnected');
-        };
-
-        wsClient.activate();
-      }, 100); // 100ms delay to avoid race condition
+    const setupConnection = async () => {
+      try {
+        await fetchParticipants(roomData.roomId);
+        // TODO: Setup WebSocket/STOMP connection here
+      } catch (e) {
+        console.error('Setup error:', e);
+        retryTimeout = setTimeout(setupConnection, 2000);
+      }
     };
 
-    setupWebSocket();
-    
+    setupConnection();
+
     return () => {
-      console.log('Cleaning up WebSocket connection');
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-      if (wsClient) {
-        wsClient.deactivate();
-      }
+      if (retryTimeout) clearTimeout(retryTimeout);
+      // TODO: Cleanup WebSocket connection
     };
-  }, [roomData]);
+  }, [roomData?.roomId]);
 
-  const value = { 
-    roomData, 
+  const value = {
+    roomData,
     setRoomData,
-    participants, 
-    isLoading, 
+    participants,
+    isLoading,
     error,
-    createRoom, 
+    createRoom,
+    joinRoom,
     fetchParticipants,
-    refreshParticipants
+    refreshParticipants,
   };
 
-  return (
-    <RoomContext.Provider value={value}>
-      {children}
-    </RoomContext.Provider>
-  );
+  return <RoomContext.Provider value={value}>{children}</RoomContext.Provider>;
 }
