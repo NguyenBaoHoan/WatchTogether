@@ -26,6 +26,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Cho phép mọi người truy cập API tạo và tham gia phòng mà không cần đăng nhập.
                         .requestMatchers("/api/rooms/**").permitAll()
+                        .requestMatchers("/ws", "/ws/**").permitAll()
                         .anyRequest().authenticated())
 
                 // Cấu hình không tạo session, vì mỗi request sẽ gửi kèm JWT (stateless).

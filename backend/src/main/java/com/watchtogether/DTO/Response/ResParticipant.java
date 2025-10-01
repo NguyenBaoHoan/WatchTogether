@@ -1,7 +1,6 @@
 package com.watchtogether.DTO.Response;
 
 import java.time.Instant;
-
 import lombok.Builder;
 import lombok.Data;
 

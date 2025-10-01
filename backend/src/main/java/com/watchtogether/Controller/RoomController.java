@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-
 @RestController
 @RequestMapping("/api/rooms") // Mọi request đến /api/rooms sẽ được xử lý bởi Controller này.
 @RequiredArgsConstructor
@@ -38,14 +37,13 @@ public class RoomController {
 
     @PostMapping("/{roomId}/join")
     public ResponseEntity<ResJoinRoom> joinRoom(@PathVariable String roomId,
-                                                @RequestBody(required = false) ReqJoinRoom request)
-    {
+            @RequestBody(required = false) ReqJoinRoom request) {
         return ResponseEntity.ok(roomService.joinRoom(roomId, request));
     }
 
-    @GetMapping("{roomId}/participants")
+    @GetMapping("/{roomId}/participants")
     public ResponseEntity<List<ResParticipant>> getParticipants(@PathVariable String roomId) {
         return ResponseEntity.ok(roomService.getParticipants(roomId));
     }
-    
+
 }

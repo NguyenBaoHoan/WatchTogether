@@ -19,9 +19,9 @@ const router = createBrowserRouter([
 ])
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
+  
     <RoomProvider>
       <RouterProvider router={router} />
     </RoomProvider>
-  </StrictMode>,
+  
 )

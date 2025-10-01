@@ -6,7 +6,7 @@ import {useRoom} from '../hooks/useRoom';
 
 export default function RoomRoute() {
   const { roomId } = useParams();
-  const {setRoomData, fetchParticipants} = useRoom();
+  const {setRoomData} = useRoom();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -18,7 +18,7 @@ export default function RoomRoute() {
         const res = await joinRoom(roomId, { displayName: 'Guest' });
         if (!cancelled) setData(res);
         setRoomData({...res, roomId});
-        fetchParticipants(roomId);
+        
       } catch (e) {
         if (!cancelled) setError(e?.message || 'Failed to join room');
       } finally {
