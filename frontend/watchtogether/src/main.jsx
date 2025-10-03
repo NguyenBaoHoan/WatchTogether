@@ -9,13 +9,13 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 
 const router = createBrowserRouter([
   {
-    path: '/',
+    
     element: <App />,
     children: [
-      { index: true, element: <HomePage /> },
-      { path: 'room/:roomId', element: <RoomRoute /> },
-    ],
+      { path: '/', element: <HomePage /> }
+    ]
   },
+  { path: 'room/:roomId', element: <RoomRoute /> }
 ])
 
 createRoot(document.getElementById('root')).render(
