@@ -125,6 +125,42 @@ public class RoomService {
                                 .build();
         }
 
+        /**
+         * Check if room exists in Redis
+         * @param roomId the room ID to check
+         * @return true if room exists, false otherwise
+         */
+        public boolean roomExists(String roomId) {
+                if (roomId == null || roomId.isEmpty()) {
+                        return false;
+                }
+                return roomRedisRepository.existsById(roomId);
+        }
+
+        /**
+         * Get room data from Redis
+         * @param roomId the room ID
+         * @return Room object or null if not found
+         */
+        public Room getRoom(String roomId) {
+                if (roomId == null || roomId.isEmpty()) {
+                        return null;
+                }
+                return roomRedisRepository.findById(roomId).orElse(null);
+        }
+
+        /**
+         * Save room data to Redis
+         * @param room the room object to save
+         * @return saved room object
+         */
+        public Room saveRoom(Room room) {
+                if (room == null) {
+                        throw new IllegalArgumentException("Room cannot be null");
+                }
+                return roomRedisRepository.save(room);
+        }
+
         // Sanitize list: remove nulls, distinct by id
         public List<ResParticipant> getParticipants(String roomId) {
                 return participantRepository.findByRoomId(roomId).stream()

@@ -11,15 +11,26 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class VideoEventDto {
     // Loai event: PLAY, PAUSE, SEEK, CHANGE
     private VideoEventType type;
-    //id of person who send the event
+    
+    // ID of person who send the event
     private String participantId;
-    // time of the event
+    
+    // Current playback time (seconds)
     private Double currentTime;
-    // url of the video when it is changed
-    private String url;
+    
+    // Video URL (fixed field name to match frontend)
+    private String videoUrl;
+    
+    // Timestamp when event was created
     private Long timestamp;
+    
+    // Additional metadata for validation
+    private String roomId;
+    
+    // For SYNC_STATE events
+    private String playbackState;         // "PLAYING", "PAUSED", "STOPPED"
+    private Boolean isPlaying;            // Convenience field for frontend
 }

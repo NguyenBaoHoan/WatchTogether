@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useRoom } from '../hooks/useRoom';
-
+import  VideoProvider  from '../context/VideoProvider.jsx';
 // Import các component layout và feature
 import InviteModal from '../components/features/InviteModal';
 import LeftSidebar from '../components/layout/LeftSidebar';
@@ -23,6 +23,7 @@ function RoomPage({ roomDataOverride }) {
         : data.joinUrl;
 
     return (
+        <VideoProvider>
         <div className="bg-[#1e1e24] h-screen text-white flex flex-col font-sans">
             {/* Phần Header trên cùng */}
             <RoomHeader />
@@ -49,6 +50,7 @@ function RoomPage({ roomDataOverride }) {
                 joinUrl={computedJoinUrl}
             />
         </div>
+        </VideoProvider>
     );
 }
 

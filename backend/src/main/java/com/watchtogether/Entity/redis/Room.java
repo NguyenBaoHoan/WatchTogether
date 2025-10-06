@@ -24,11 +24,14 @@ public class Room implements Serializable { // Implement Serializable để có 
     private String id;
 
     private String inviteCode;
-    private String videoSource;
-    private Double lastPosition;
-    private String playbackState;
-    private Instant lastSyncAt;
-    private Instant createdAt;
+    
+    // Video state fields
+    private String currentVideoUrl;        // URL của video hiện tại
+    private String videoSource;           // Source type (file, youtube, etc.) - deprecated, use currentVideoUrl
+    private Double lastPosition;          // Vị trí playback cuối cùng (seconds)
+    private String playbackState;         // "PLAYING", "PAUSED", "STOPPED"
+    private Instant lastSyncAt;           // Thời điểm sync cuối cùng
+    private Instant createdAt;            // Thời điểm tạo room
 
     // @TimeToLive: Tính năng đặc biệt của Redis.
     // Đặt thời gian sống cho object này (tính bằng giây).
