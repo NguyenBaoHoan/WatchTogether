@@ -1,8 +1,25 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useVideo } from '../../context/VideoContext';
-import { Play, Pause, Volume2, VolumeX, Settings, Maximize, Loader } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Settings, Maximize, Loader, Underline } from 'lucide-react';
+
 
 export default function VideoPlayer() {
+    // Đoạn mã sau sử dụng cú pháp destructuring để lấy ra các giá trị và hàm từ context VideoContext thông qua custom hook useVideo().
+    // Cụ thể:
+    // - videoUrl: đường dẫn video hiện tại.
+    // - isPlaying: trạng thái video đang phát hay tạm dừng.
+    // - currentTime: thời gian hiện tại của video (tính bằng giây).
+    // - duration: tổng thời lượng video.
+    // - playVideo: hàm để phát video.
+    // - pauseVideo: hàm để tạm dừng video.
+    // - seekVideo: hàm để tua video đến một thời điểm nhất định.
+    // - changeVideo: hàm để đổi video khác.
+    // - playerRef: tham chiếu đến phần tử video để thao tác trực tiếp.
+    // - isSyncing: trạng thái đang đồng bộ hóa video giữa các người dùng.
+    // - updateCurrentTime: hàm cập nhật thời gian hiện tại của video.
+    // - updateDuration: hàm cập nhật tổng thời lượng video.
+    //
+    // Việc sử dụng destructuring như trên giúp truy cập nhanh các giá trị/hàm cần thiết từ context mà không phải gọi useVideo() nhiều lần.
     const {
         videoUrl,
         isPlaying,
@@ -55,6 +72,33 @@ export default function VideoPlayer() {
         videoElement.muted = isMuted;
     }, [playerRef, volume, isMuted]);
 
+    // ============================================
+    // ⭐ SYNC STATE WITH VIDEO ELEMENT
+    // ============================================
+    // Phần useEffect này chịu trách nhiệm đồng bộ trạng thái phát/tạm dừng (isPlaying) từ React state xuống video element thực tế.
+    // Nếu bỏ phần này, khi bạn thay đổi isPlaying (ví dụ bấm nút play/pause), video element sẽ không tự động phát hoặc dừng theo state nữa.
+    // Điều này là do video element không tự biết khi nào state thay đổi, nên cần useEffect để "đẩy" lệnh play/pause xuống DOM.
+    // Ngoài ra, nó còn xử lý lỗi autoplay bị chặn trên trình duyệt (NotAllowedError) bằng cách thử play lại.
+    useEffect(() => {
+        if (!videoElementRef.current) return;
+        const videoElement = videoElementRef.current;
+
+        if (isPlaying) {
+            const playPromise = videoElement.play();
+            if (playPromise !== undefined) {
+                playPromise.catch((error) => {
+                    console.error('Play fail: ', error);
+                    // Nếu autoplay bị chặn, thử play lại thủ công
+                    if (error.name === 'NotAllowedError') {
+                        console.warn('Autoplay blocked, playing manually');
+                        videoElement.play();
+                    }
+                });
+            }
+        } else {
+            videoElement.pause();
+        }
+    }, [isPlaying]);
     // ============================================
     // 📍 VIDEO EVENT HANDLERS
     // ============================================
@@ -208,7 +252,7 @@ export default function VideoPlayer() {
                             onWaiting={handleWaiting}
                             onPlaying={handlePlaying}
                         />
-                        
+
                         {/* Loading overlay */}
                         {(isLoading || isBuffering) && (
                             <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
@@ -256,11 +300,15 @@ export default function VideoPlayer() {
 
                     <div className="flex items-center space-x-2">
                         {/* Volume controls */}
-                        <button 
+                        <button
                             onClick={handleMuteToggle}
                             className="p-2 hover:bg-gray-700 rounded"
                         >
-                            {isMuted || volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                            {isMuted || volume === 0 ? (
+                                <VolumeX size={20} />
+                            ) : (
+                                <Volume2 size={20} />
+                            )}
                         </button>
                         <input
                             type="range"
@@ -271,7 +319,7 @@ export default function VideoPlayer() {
                             onChange={handleVolumeChange}
                             className="w-20 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer"
                         />
-                        
+
                         <button className="p-2 hover:bg-gray-700 rounded">
                             <Settings size={20} />
                         </button>
