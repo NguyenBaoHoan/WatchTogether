@@ -2,6 +2,8 @@ import React from 'react';
 import VideoCard from './VideoCard';
 
 const VideoGrid = ({ videos, title, columns = 5 }) => {
+    console.log('VideoGrid render:', title, videos.length); // Debug
+
     return (
         <div className="mb-8">
             <h3 className="text-xl font-semibold text-white mb-4">{title}</h3>

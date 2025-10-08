@@ -26,13 +26,26 @@ const VideoCard = ({ video }) => {
         >
             {/* Thumbnail */}
             <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-800">
+                {/* ⭐ DÙng IMG với thumbnail từ props */}
                 <img
                     src={video.thumbnail}
                     alt={video.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                    className="w-full h-full object-cover"
                     onError={(e) => {
-                        // Fallback nếu thumbnail lỗi
-                        e.target.src = 'https://via.placeholder.com/320x180/1e1e1e/ffffff?text=Video';
+                        // ⭐ Fallback nếu thumbnail lỗi
+                        console.error('Thumbnail failed to load:', video.thumbnail);
+                        e.target.style.display = 'none';
+                        e.target.parentElement.classList.add('bg-gradient-to-br', 'from-gray-700', 'to-gray-900');
+                        
+                        // Show play icon as fallback
+                        const fallbackDiv = document.createElement('div');
+                        fallbackDiv.className = 'absolute inset-0 flex items-center justify-center';
+                        fallbackDiv.innerHTML = `
+                            <svg class="w-12 h-12 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                            </svg>
+                        `;
+                        e.target.parentElement.appendChild(fallbackDiv);
                     }}
                 />
 
