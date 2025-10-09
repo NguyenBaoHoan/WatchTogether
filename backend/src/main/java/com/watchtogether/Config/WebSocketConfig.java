@@ -51,8 +51,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer, WebSoc
         // Định nghĩa endpoint kết nối WebSocket chính: /ws
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*") // cho phép mọi origin
-                // .addInterceptors(new WebSocketHandshakeInterceptor()) // thêm bước xác thực
-                // JWT
+                .addInterceptors(new WebSocketHandshakeInterceptor()) // thêm bước xác thực JWT
                 .withSockJS(); // bật SockJS fallback (phòng khi browser không hỗ trợ WS)
     }
 
@@ -64,7 +63,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer, WebSoc
     }
 
     // 🔐
-
     // Interceptor xác
     // thực JWT
     // khi handshake bắt đầu
