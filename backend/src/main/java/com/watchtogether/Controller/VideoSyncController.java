@@ -9,6 +9,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import com.watchtogether.DTO.Request.VideoEventDto;
+import com.watchtogether.DTO.Response.ErrorResponse;
 import com.watchtogether.Service.VideoSyncService;
 import com.watchtogether.Service.RoomService;
 
@@ -39,14 +40,14 @@ public class VideoSyncController {
             @DestinationVariable String roomId,
             @Payload VideoEventDto event,
             SimpMessageHeaderAccessor headerAccessor) {
-        
+
         try {
             // 1. Get participant info from session
             String participantId = (String) headerAccessor.getSessionAttributes().get("participantId");
-            
-            if (participantId == null) {
-                log.warn("No participantId in session for video event in room: {}", roomId);
-                sendErrorToClient(headerAccessor, "Authentication required");
+            String sessionRoomId = (String) headerAccessor.getSessionAttributes().get("roomId");
+
+            if (participantId == null || !roomId.equals(sessionRoomId)) {
+                log.warn("Invalid session or mismatched room for participant event");
                 return;
             }
 
@@ -69,7 +70,7 @@ public class VideoSyncController {
             event.setRoomId(roomId);
             event.setTimestamp(System.currentTimeMillis());
 
-            log.info("Processing video event: type={}, roomId={}, from={}, time={}", 
+            log.info("Processing video event: type={}, roomId={}, from={}, time={}",
                     event.getType(), roomId, participantId, event.getCurrentTime());
 
             // 5. Broadcast to all participants in room
@@ -88,26 +89,11 @@ public class VideoSyncController {
         String sessionId = headerAccessor.getSessionId();
         if (sessionId != null) {
             messagingTemplate.convertAndSendToUser(
-                sessionId, 
-                "/queue/errors", 
-                new ErrorResponse(errorMessage, System.currentTimeMillis())
-            );
+                    sessionId,
+                    "/queue/errors",
+                    new ErrorResponse(errorMessage, System.currentTimeMillis()));
         }
     }
 
-    /**
-     * Error response DTO
-     */
-    public static class ErrorResponse {
-        private String message;
-        private Long timestamp;
-
-        public ErrorResponse(String message, Long timestamp) {
-            this.message = message;
-            this.timestamp = timestamp;
-        }
-
-        public String getMessage() { return message; }
-        public Long getTimestamp() { return timestamp; }
-    }
+    
 }

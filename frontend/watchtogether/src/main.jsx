@@ -6,14 +6,15 @@ import RoomProvider from './context/RoomProvider.jsx'
 import HomePage from './pages/HomePage.jsx'
 import RoomRoute from './pages/RoomRoute.jsx'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-
+import { TestWebSocket } from './pages/TestWebSocket.jsx'
 const router = createBrowserRouter([
   {
     
     element: <App />,
     children: [
-      { path: '/', element: <HomePage /> }
-    ]
+      { path: '/', element: <HomePage /> },
+      { path: "/ws-test", element: <TestWebSocket /> },
+    ],
   },
   { path: 'room/:roomId', element: <RoomRoute /> }
 ])
