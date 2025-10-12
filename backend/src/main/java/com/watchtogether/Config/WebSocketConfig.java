@@ -59,12 +59,12 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer, WebSoc
 
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(nativeHandler, "/ws-native")
+                .addInterceptors(new WebSocketHandshakeInterceptor()) // thêm bước xác thực JWT
                 .setAllowedOrigins("*"); // Allow all for testing
     }
 
     // 🔐
-    // Interceptor xác
-    // thực JWT
+    // Interceptor xác thực JWT
     // khi handshake bắt đầu
 
     @RequiredArgsConstructor
