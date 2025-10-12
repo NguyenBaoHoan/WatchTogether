@@ -1,5 +1,6 @@
 package com.watchtogether.Config;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.context.annotation.Configuration;
@@ -66,32 +67,38 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer, WebSoc
     // 🔐
     // Interceptor xác thực JWT
     // khi handshake bắt đầu
-
-    @RequiredArgsConstructor
     public class WebSocketHandshakeInterceptor implements HandshakeInterceptor {
         @Override
         public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
                 WebSocketHandler wsHandler, Map<String, Object> attributes) {
             try {
+                // 1) Thử header Authorization
                 String authHeader = request.getHeaders().getFirst("Authorization");
-                // Header JWT dạng: Bearer <token>
+                String token = null;
                 if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                    String token = authHeader.substring(7);
-
-                    // Xác thực token hợp lệ
-                    if (jwtService.validateToken(token)) {
-                        // Trích xuất participantId và roomId từ JWT
-                        String participantId = jwtService.extractParticipantId(token);
-                        String roomId = jwtService.extractRoomId(token);
-
-                        // Lưu vào session attributes để các Controller có thể lấy lại
-                        attributes.put("participantId", participantId);
-                        attributes.put("roomId", roomId);
-
-                        log.info("✅ WebSocket handshake success: participant {} joined room {}",
-                                participantId, roomId);
-                        return true;
+                    token = authHeader.substring(7);
+                } else {
+                    // 2) Thử cookie header
+                    List<String> cookieHeaders = request.getHeaders().get("cookie");
+                    if (cookieHeaders != null) {
+                        for (String cookieHeader : cookieHeaders) {
+                            // cookieHeader ví dụ: "WT_ACCESS_TOKEN=xx; other=yy"
+                            String tokenCandidate = parseCookie(cookieHeader, "WT_ACCESS_TOKEN");
+                            if (tokenCandidate != null) {
+                                token = tokenCandidate;
+                                break;
+                            }
+                        }
                     }
+                }
+
+                if (token != null && jwtService.validateToken(token)) {
+                    String participantId = jwtService.extractParticipantId(token);
+                    String roomId = jwtService.extractRoomId(token);
+                    attributes.put("participantId", participantId);
+                    attributes.put("roomId", roomId);
+                    log.info("✅ WebSocket handshake success: participant {} joined room {}", participantId, roomId);
+                    return true;
                 }
                 log.warn("❌ WebSocket handshake failed: Missing or invalid token");
                 return false;
@@ -103,8 +110,20 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer, WebSoc
 
         @Override
         public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response,
-                WebSocketHandler wsHandler, Exception exception) {
-            // Không cần xử lý sau handshake
+                                  WebSocketHandler wsHandler, Exception exception) {
+            // No-op: can add logging or cleanup here if needed
+        }
+
+        // helper parse cookie string
+        private String parseCookie(String cookieHeader, String name) {
+            String[] pairs = cookieHeader.split(";");
+            for (String p : pairs) {
+                String[] kv = p.trim().split("=", 2);
+                if (kv.length == 2 && kv[0].equals(name)) {
+                    return kv[1];
+                }
+            }
+            return null;
         }
     }
 }

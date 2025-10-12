@@ -173,9 +173,6 @@ export default function VideoProvider({ children }) {
     // Tạo STOMP client
     const client = new Client({
       webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
-      connectHeaders: {
-        Authorization: `Bearer ${roomData.accessToken}`,
-      },
       debug: (str) => console.log('STOMP:', str),
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,

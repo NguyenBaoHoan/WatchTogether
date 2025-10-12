@@ -15,7 +15,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
+
 
 @RestController
 @RequestMapping("/api/rooms") // Mọi request đến /api/rooms sẽ được xử lý bởi Controller này.
@@ -29,8 +31,20 @@ public class RoomController {
     public ResponseEntity<ResCreateRoom> createRoom(@RequestBody(required = false) ReqCreateRoom request) {
         // Gọi service để thực hiện logic tạo phòng
         ResCreateRoom response = roomService.createRoom(request);
+        // Tạo cookie HttpOnly
+        ResponseCookie cookie = ResponseCookie.from("WT_ACCESS_TOKEN", response.getAccessToken())
+                .httpOnly(true)
+                .secure(true)           // production: true (HTTPS)
+                .path("/")
+                .maxAge(86400)         // hoặc thời gian phù hợp
+                .sameSite("None")      // nếu frontend khác origin, cần None + Secure
+                .build();
+
         // Trả về response cho client với HTTP status 201 Created (Tạo thành công).
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(response);
     }
 
     // (Sau này bạn sẽ thêm các API khác ở đây, ví dụ: join room)
