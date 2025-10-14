@@ -9,6 +9,9 @@ import lombok.NoArgsConstructor;
 @Builder
 public class ResJoinRoom {
     private String roomId;
+    private String displayName;
+    private String participantId;
+    private String participantRole;
     private String accessToken;
     private String wsUrl;
 }

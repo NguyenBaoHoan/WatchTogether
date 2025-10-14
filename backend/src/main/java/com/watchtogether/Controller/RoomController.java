@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 
-
 @RestController
 @RequestMapping("/api/rooms") // Mọi request đến /api/rooms sẽ được xử lý bởi Controller này.
 @RequiredArgsConstructor
@@ -34,10 +33,10 @@ public class RoomController {
         // Tạo cookie HttpOnly
         ResponseCookie cookie = ResponseCookie.from("WT_ACCESS_TOKEN", response.getAccessToken())
                 .httpOnly(true)
-                .secure(true)           // production: true (HTTPS)
+                .secure(true) // production: true (HTTPS)
                 .path("/")
-                .maxAge(86400)         // hoặc thời gian phù hợp
-                .sameSite("None")      // nếu frontend khác origin, cần None + Secure
+                .maxAge(86400) // hoặc thời gian phù hợp
+                .sameSite("None") // nếu frontend khác origin, cần None + Secure
                 .build();
 
         // Trả về response cho client với HTTP status 201 Created (Tạo thành công).
@@ -50,9 +49,27 @@ public class RoomController {
     // (Sau này bạn sẽ thêm các API khác ở đây, ví dụ: join room)
 
     @PostMapping("/{roomId}/join")
-    public ResponseEntity<ResJoinRoom> joinRoom(@PathVariable String roomId,
-            @RequestBody(required = false) ReqJoinRoom request) {
-        return ResponseEntity.ok(roomService.joinRoom(roomId, request));
+    public ResponseEntity<ResJoinRoom> joinRoom(
+            @PathVariable String roomId,
+            @RequestBody(required = false) ReqJoinRoom request,
+            @CookieValue(value = "WT_ACCESS_TOKEN", required = false) String existingToken) {
+        
+        // Truyền existingToken vào service để kiểm tra duplicate
+        ResJoinRoom response = roomService.joinRoom(roomId, request, existingToken);
+
+        // Tạo cookie HttpOnly cho access token
+        ResponseCookie cookie = ResponseCookie.from("WT_ACCESS_TOKEN", response.getAccessToken())
+                .httpOnly(true)
+                .secure(false) // dev: false, production: true (HTTPS)
+                .path("/")
+                .maxAge(86400) // 24 giờ
+                .sameSite("None") // cho phép cross-origin
+                .build();
+
+        return ResponseEntity
+                .ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(response);
     }
 
     @GetMapping("/{roomId}/participants")

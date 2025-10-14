@@ -8,4 +8,5 @@ import lombok.Data;
 public class ReqJoinRoom {
     private String displayName;
     private String inviteCode;
+    private String role; // "host" hoặc "guest"
 }

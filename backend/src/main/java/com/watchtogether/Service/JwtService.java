@@ -65,7 +65,8 @@ public class JwtService {
 
     // Getter chi tiết từ payload JWT
     public String extractParticipantId(String token) {
-        return extractClaim(token, claims -> claims.get("participantId", String.class));
+        // ⭐ Lấy từ Subject (vì generateToken đặt participant.getId() vào subject)
+        return extractClaim(token, Claims::getSubject);
     }
 
     public String extractRoomId(String token) {

@@ -1,10 +1,12 @@
 export const createRoom = async () => {
     try {
-        const response = await fetch('http://localhost:8080/api/rooms', {
+        // ⭐ Dùng relative path để tận dụng Vite proxy
+        const response = await fetch('/api/rooms', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
+            credentials: 'include', // ⭐ Quan trọng: gửi và nhận cookie
             body: JSON.stringify({}),
         });
         if(!response.ok) {
@@ -22,11 +24,13 @@ export const createRoom = async () => {
 
 export const joinRoom = async (roomId, body = {}) => {
     try {
-        const response = await fetch(`http://localhost:8080/api/rooms/${roomId}/join`, {
+        // ⭐ Dùng relative path để tận dụng Vite proxy
+        const response = await fetch(`/api/rooms/${roomId}/join`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
+            credentials: 'include', // ⭐ Quan trọng: gửi và nhận cookie
             body: JSON.stringify(body),
         });
         if(!response.ok) {
@@ -41,11 +45,13 @@ export const joinRoom = async (roomId, body = {}) => {
 
 export const getParticipants = async (roomId) => {
     try {
-        const response = await fetch(`http://localhost:8080/api/rooms/${roomId}/participants`, {
+        // ⭐ Dùng relative path để tận dụng Vite proxy
+        const response = await fetch(`/api/rooms/${roomId}/participants`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
             },
+            credentials: 'include', // ⭐ Quan trọng: gửi cookie để xác thực
         });
         if(!response.ok) {
             throw new Error('HTTP error ' + response.status);

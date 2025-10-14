@@ -89,18 +89,64 @@ public class RoomService {
         }
 
         @Transactional
-        public ResJoinRoom joinRoom(String roomId, ReqJoinRoom request) {
-                // verify room exists in Redis and validate invite code
+        public ResJoinRoom joinRoom(String roomId, ReqJoinRoom request, String existingToken) {
+                // ⭐ BƯỚC 1: Kiểm tra xem user đã join phòng này chưa (qua token)
+                if (existingToken != null && !existingToken.isEmpty()) {
+                        try {
+                                // Validate token
+                                if (jwtService.validateToken(existingToken)) {
+                                        String existingParticipantId = jwtService.extractParticipantId(existingToken);
+                                        String tokenRoomId = jwtService.extractRoomId(existingToken);
+
+                                        // Kiểm tra token có thuộc phòng này không
+                                        if (tokenRoomId.equals(roomId)) {
+                                                // Tìm participant trong DB
+                                                Optional<Participant> existingParticipant = participantRepository
+                                                                .findById(existingParticipantId);
+
+                                                if (existingParticipant.isPresent()) {
+                                                        // ✅ User đã join rồi → trả về thông tin cũ (không tạo
+                                                        // duplicate)
+                                                        Participant p = existingParticipant.get();
+                                                        String role = p.getRole() != null ? p.getRole() : "GUEST"; // ⭐
+                                                                                                                   // Fallback
+                                                                                                                   // nếu
+                                                                                                                   // role
+                                                                                                                   // null
+                                                        String wsUrl = "http://localhost:8080/ws";
+                                                        return ResJoinRoom.builder()
+                                                                        .roomId(roomId)
+                                                                        .displayName(p.getDisplayName())
+                                                                        .participantId(existingParticipantId)
+                                                                        .participantRole(role)
+                                                                        .accessToken(existingToken) // Dùng lại token cũ
+                                                                        .wsUrl(wsUrl)
+                                                                        .build();
+                                                }
+                                        }
+                                }
+                        } catch (Exception e) {
+                                // Token invalid hoặc expired → tạo participant mới ở bước sau
+                                System.out.println("⚠️ Token invalid, creating new participant: " + e.getMessage());
+                        }
+                }
+
+                // ⭐ BƯỚC 2: Tạo participant mới (user chưa join hoặc token invalid)
                 String participantId = UUID.randomUUID().toString();
                 String displayName = (request != null && request.getDisplayName() != null
                                 && !request.getDisplayName().isEmpty())
                                                 ? request.getDisplayName()
                                                 : "Guest";
+                String role = (request != null && request.getRole() != null
+                                && (request.getRole().equalsIgnoreCase("host")
+                                                || request.getRole().equalsIgnoreCase("guest")))
+                                                                ? request.getRole().toUpperCase()
+                                                                : "GUEST";
                 Participant guest = Participant.builder()
                                 .id(participantId)
                                 .roomId(roomId)
                                 .displayName(displayName)
-                                .role("GUEST")
+                                .role(role)
                                 .joinedAt(Instant.now())
                                 .build();
                 participantRepository.save(guest);
@@ -120,6 +166,9 @@ public class RoomService {
                 String wsUrl = "http://localhost:8080/ws";
                 return ResJoinRoom.builder()
                                 .roomId(roomId)
+                                .displayName(displayName)
+                                .participantId(participantId)
+                                .participantRole(role)
                                 .accessToken(accessToken)
                                 .wsUrl(wsUrl)
                                 .build();
@@ -127,6 +176,7 @@ public class RoomService {
 
         /**
          * Check if room exists in Redis
+         * 
          * @param roomId the room ID to check
          * @return true if room exists, false otherwise
          */
@@ -139,6 +189,7 @@ public class RoomService {
 
         /**
          * Get room data from Redis
+         * 
          * @param roomId the room ID
          * @return Room object or null if not found
          */
@@ -151,6 +202,7 @@ public class RoomService {
 
         /**
          * Save room data to Redis
+         * 
          * @param room the room object to save
          * @return saved room object
          */

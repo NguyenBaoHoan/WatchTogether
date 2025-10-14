@@ -22,8 +22,11 @@ export default function RoomProvider({ children }) {
     setError(null);
     try {
       const data = await createRoomAPI();
-      setRoomData(data);
-      return data;
+      // ⭐ Không lưu accessToken (đã có trong HttpOnly cookie)
+      // eslint-disable-next-line no-unused-vars
+      const { accessToken, ...safeData } = data;
+      setRoomData(safeData);
+      return safeData;
     } catch (err) {
       setError(err?.message || 'Failed to create room');
       throw err;
@@ -56,9 +59,12 @@ export default function RoomProvider({ children }) {
 // ⭐ PHẦN QUAN TRỌNG 5: Đánh dấu đã join thành công
     try {
       const data = await joinRoomAPI(roomId, payload ?? { displayName: 'Guest' });
-      setRoomData(data);
+      // ⭐ Không lưu accessToken (đã có trong HttpOnly cookie)
+      // eslint-disable-next-line no-unused-vars
+      const { accessToken, ...safeData } = data;
+      setRoomData(safeData);
       hasJoinedRef.current = true; // ✅ Đánh dấu đã join
-      return data;
+      return safeData;
     } catch (err) {
       setError(err?.message || 'Failed to join room');
       throw err;

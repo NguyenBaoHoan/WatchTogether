@@ -6,6 +6,23 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
 
+  // ⭐ Cấu hình proxy để tránh CORS và cookie cross-origin
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/ws': {
+        target: 'http://localhost:8080',
+        ws: true, // Bật WebSocket proxy
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
+
   define: {
     global: 'window',  // Map 'global' thành 'window'
   },

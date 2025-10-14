@@ -166,13 +166,16 @@ export default function VideoProvider({ children }) {
   // 📡 WEBSOCKET: Nhận events từ server
   // ============================================
   useEffect(() => {
-    if (!roomData?.roomId || !roomData?.accessToken) return;
+    // ⭐ Không cần kiểm tra accessToken nữa (đã có trong HttpOnly cookie)
+    if (!roomData?.roomId) return;
 
     console.log('🔌 Connecting to WebSocket...');
 
     // Tạo STOMP client
     const client = new Client({
-      webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
+      // ⭐ Dùng relative path để tận dụng Vite proxy
+      webSocketFactory: () => new SockJS('/ws'),
+      // ⭐ Không cần connectHeaders (cookie sẽ tự động gửi)
       debug: (str) => console.log('STOMP:', str),
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
@@ -280,7 +283,8 @@ export default function VideoProvider({ children }) {
       console.log('🔌 Disconnecting WebSocket...');
       client.deactivate();
     };
-  }, [roomData?.roomId, roomData?.accessToken]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomData?.roomId]); // ⭐ Bỏ accessToken khỏi dependencies
 
   // ============================================
   // 🎁 CONTEXT VALUE
