@@ -33,10 +33,10 @@ public class RoomController {
         // Tạo cookie HttpOnly
         ResponseCookie cookie = ResponseCookie.from("WT_ACCESS_TOKEN", response.getAccessToken())
                 .httpOnly(true)
-                .secure(true) // production: true (HTTPS)
+                .secure(false) // dev: false, production: true (HTTPS)
                 .path("/")
                 .maxAge(86400) // hoặc thời gian phù hợp
-                .sameSite("None") // nếu frontend khác origin, cần None + Secure
+                .sameSite("Lax") // ⭐ Vì dùng proxy, FE/BE cùng origin → dùng Lax
                 .build();
 
         // Trả về response cho client với HTTP status 201 Created (Tạo thành công).
@@ -54,6 +54,9 @@ public class RoomController {
             @RequestBody(required = false) ReqJoinRoom request,
             @CookieValue(value = "WT_ACCESS_TOKEN", required = false) String existingToken) {
         
+        // 🔍 Debug log
+        System.out.println("🍪 Received cookie: " + (existingToken != null ? "YES (length=" + existingToken.length() + ")" : "NO"));
+        
         // Truyền existingToken vào service để kiểm tra duplicate
         ResJoinRoom response = roomService.joinRoom(roomId, request, existingToken);
 
@@ -63,7 +66,7 @@ public class RoomController {
                 .secure(false) // dev: false, production: true (HTTPS)
                 .path("/")
                 .maxAge(86400) // 24 giờ
-                .sameSite("None") // cho phép cross-origin
+                .sameSite("Lax") // ⭐ Vì dùng proxy, FE/BE cùng origin → dùng Lax
                 .build();
 
         return ResponseEntity
