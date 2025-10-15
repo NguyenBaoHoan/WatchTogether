@@ -109,10 +109,7 @@ public class RoomService {
                                                         // duplicate)
                                                         Participant p = existingParticipant.get();
                                                         String role = p.getRole() != null ? p.getRole() : "GUEST"; // ⭐
-                                                                                                                   // Fallback
-                                                                                                                   // nếu
-                                                                                                                   // role
-                                                                                                                   // null
+                                                                                                                   // Fallback nếu role null
                                                         String wsUrl = "http://localhost:8080/ws";
                                                         return ResJoinRoom.builder()
                                                                         .roomId(roomId)

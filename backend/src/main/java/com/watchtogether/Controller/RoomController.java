@@ -79,5 +79,4 @@ public class RoomController {
     public ResponseEntity<List<ResParticipant>> getParticipants(@PathVariable String roomId) {
         return ResponseEntity.ok(roomService.getParticipants(roomId));
     }
-
 }
