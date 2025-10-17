@@ -63,13 +63,3 @@ WatchTogether/
 └── frontend/       # React + Vite + Tailwind (UI)
     ├── src/
     └── public/
-🤝 Contributing
-
-Contributions are welcome!
-Feel free to fork, open issues, or submit PRs.
-
-📜 License
-
-This project is licensed under the MIT License.
-
-<p align="center">Made with ❤️ by <a href="https://github.com/NguyenBaoHoan">Nguyen Bao Hoan</a></p> ```
