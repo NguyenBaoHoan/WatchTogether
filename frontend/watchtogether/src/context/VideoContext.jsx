@@ -13,8 +13,8 @@ export const VideoContext = createContext({
   // Actions
   playVideo: () => {},      // Play video
   pauseVideo: () => {},     // Pause video
-  seekVideo: (time) => {},  // Kéo tới vị trí mới
-  changeVideo: (url) => {}, // Đổi video
+  seekVideo: (time) => { void time; },  // Kéo tới vị trí mới
+  changeVideo: (url) => { void url; }, // Đổi video
   
   // Sync flag (tránh loop)
   isSyncing: false,         // Đang sync từ server?

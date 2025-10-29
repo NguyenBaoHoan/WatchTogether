@@ -8,7 +8,7 @@ import RoomRoute from './pages/RoomRoute.jsx'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { TestWebSocket } from './pages/TestWebSocket.jsx'
 import TestPage from './__tests__/TestPage.jsx'
-
+import TestPageGemini from './__tests__/TestPageGemini.jsx'
 const router = createBrowserRouter([
   {
 
@@ -17,6 +17,7 @@ const router = createBrowserRouter([
       { path: '/', element: <HomePage /> },
       { path: "/ws-test", element: <TestWebSocket /> },
       { path: "/test", element: <TestPage /> },
+      { path: "/testgemini", element : <TestPageGemini/>}
     ],
   },
   { path: 'room/:roomId', element: <RoomRoute /> }

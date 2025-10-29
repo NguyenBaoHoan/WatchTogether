@@ -1,25 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useVideo } from '../../context/VideoContext';
-import { Play, Pause, Volume2, VolumeX, Settings, Maximize, Loader, Underline } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Settings, Maximize, Loader } from 'lucide-react';
 
 
 export default function VideoPlayer() {
-    // Đoạn mã sau sử dụng cú pháp destructuring để lấy ra các giá trị và hàm từ context VideoContext thông qua custom hook useVideo().
-    // Cụ thể:
-    // - videoUrl: đường dẫn video hiện tại.
-    // - isPlaying: trạng thái video đang phát hay tạm dừng.
-    // - currentTime: thời gian hiện tại của video (tính bằng giây).
-    // - duration: tổng thời lượng video.
-    // - playVideo: hàm để phát video.
-    // - pauseVideo: hàm để tạm dừng video.
-    // - seekVideo: hàm để tua video đến một thời điểm nhất định.
-    // - changeVideo: hàm để đổi video khác.
-    // - playerRef: tham chiếu đến phần tử video để thao tác trực tiếp.
-    // - isSyncing: trạng thái đang đồng bộ hóa video giữa các người dùng.
-    // - updateCurrentTime: hàm cập nhật thời gian hiện tại của video.
-    // - updateDuration: hàm cập nhật tổng thời lượng video.
-    //
-    // Việc sử dụng destructuring như trên giúp truy cập nhanh các giá trị/hàm cần thiết từ context mà không phải gọi useVideo() nhiều lần.
     const {
         videoUrl,
         isPlaying,
@@ -30,7 +14,7 @@ export default function VideoPlayer() {
         seekVideo,
         changeVideo,
         playerRef,
-        isSyncing,
+        isSyncing,        // ⭐ State để UI tự động update khi sync
         updateCurrentTime,
         updateDuration,
     } = useVideo();
@@ -116,11 +100,29 @@ export default function VideoPlayer() {
         }
     };
 
+    // ✅ FIX: Thêm debounce cho onTimeUpdate để tránh quá nhiều updates
+    const timeUpdateRef = useRef(null);
+    
     const handleTimeUpdate = (e) => {
         if (!isSyncing && updateCurrentTime) {
-            updateCurrentTime(e.target.currentTime);
+            // Debounce để tránh quá nhiều updates
+            if (timeUpdateRef.current) {
+                clearTimeout(timeUpdateRef.current);
+            }
+            timeUpdateRef.current = setTimeout(() => {
+                updateCurrentTime(e.target.currentTime);
+            }, 100); // Debounce 100ms
         }
     };
+
+    // ✅ FIX: Cleanup timeout khi component unmount
+    useEffect(() => {
+        return () => {
+            if (timeUpdateRef.current) {
+                clearTimeout(timeUpdateRef.current);
+            }
+        };
+    }, []);
 
     const handleLoadedMetadata = (e) => {
         console.log('📊 Video metadata loaded, duration:', e.target.duration);
