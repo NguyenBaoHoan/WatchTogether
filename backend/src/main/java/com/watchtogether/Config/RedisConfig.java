@@ -5,6 +5,6 @@ import org.springframework.data.redis.repository.configuration.EnableRedisReposi
 
 // com.watchtogether.Config/RedisRepoConfig.java
 @Configuration
-@EnableRedisRepositories(basePackages = "com.watchtogether.repository.redis")
+@EnableRedisRepositories(basePackages = "com.watchtogether.Repository.redis") // ⭐ FIX: Chữ R hoa
 public class RedisConfig {
 }
