@@ -19,7 +19,7 @@
 import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, Mail, Lock, User, Loader, Github, CheckCircle, XCircle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { socialLogin } from '../../services/AuthService';
+// Không cần import socialLogin nữa vì chưa implement
 
 export default function RegisterForm({ onSuccess, onSwitchToLogin }) {
     // ============================================
@@ -177,8 +177,9 @@ export default function RegisterForm({ onSuccess, onSwitchToLogin }) {
     // 🌐 SOCIAL REGISTER
     // ============================================
     const handleSocialRegister = (provider) => {
-        const url = socialLogin(provider);
-        window.location.href = url;
+        // TODO: Implement social login redirect
+        const baseURL = 'http://localhost:8080/api/v1';
+        window.location.href = `${baseURL}/auth/social/${provider}`;
     };
 
     return (
@@ -287,8 +288,8 @@ export default function RegisterForm({ onSuccess, onSwitchToLogin }) {
                             <div className="flex items-center justify-between mb-1">
                                 <span className="text-xs text-gray-400">Password strength:</span>
                                 <span className={`text-xs font-semibold ${passwordStrength.score <= 2 ? 'text-red-400' :
-                                        passwordStrength.score <= 4 ? 'text-yellow-400' :
-                                            'text-green-400'
+                                    passwordStrength.score <= 4 ? 'text-yellow-400' :
+                                        'text-green-400'
                                     }`}>
                                     {passwordStrength.text}
                                 </span>
@@ -324,8 +325,8 @@ export default function RegisterForm({ onSuccess, onSwitchToLogin }) {
                             value={formData.confirmPassword}
                             onChange={handleChange}
                             className={`w-full pl-10 pr-12 py-3 bg-white/10 border ${errors.confirmPassword ? 'border-red-500' :
-                                    formData.confirmPassword && formData.password === formData.confirmPassword ? 'border-green-500' :
-                                        'border-gray-600'
+                                formData.confirmPassword && formData.password === formData.confirmPassword ? 'border-green-500' :
+                                    'border-gray-600'
                                 } rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all`}
                             placeholder="••••••••"
                             autoComplete="new-password"

@@ -17,7 +17,7 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock, Loader, Github } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { socialLogin } from '../../services/AuthService';
+import { socialLogin } from '../../services/authService';
 
 export default function LoginForm({ onSuccess, onSwitchToRegister }) {
   // ============================================

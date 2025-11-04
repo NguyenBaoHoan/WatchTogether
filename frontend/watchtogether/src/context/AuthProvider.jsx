@@ -9,7 +9,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { AuthContext } from './AuthContext';
-import * as AuthService from '../services/AuthService';
+import { authService } from '../services/authService';
 
 export default function AuthProvider({ children }) {
   // ============================================
@@ -26,12 +26,12 @@ export default function AuthProvider({ children }) {
     const verifyUserToken = async () => {
       try {
         console.log('🔍 Verifying authentication token...');
-        const response = await AuthService.verifyToken();
+        const response = await authService.getCurrentUser();
 
-        if (response && response.user) {
-          setUser(response.user);
+        if (response) {
+          setUser(response);
           setIsAuthenticated(true);
-          console.log('✅ User authenticated:', response.user.email);
+          console.log('✅ User authenticated:', response.email || response.userName);
         }
       } catch (error) {
         console.log('❌ Token verification failed:', error.message);
@@ -49,19 +49,19 @@ export default function AuthProvider({ children }) {
   // ============================================
   // 🔐 LOGIN FUNCTION
   // ============================================
-  const login = useCallback(async (email, password, rememberMe = false) => {
+  const login = useCallback(async (username, password) => {
     try {
-      console.log('🔐 Logging in user:', email);
-      const response = await AuthService.login(email, password, rememberMe);
+      console.log('🔐 Logging in user:', username);
+      const response = await authService.login(username, password);
 
-      if (response && response.user) {
-        setUser(response.user);
-        setIsAuthenticated(true);
-        console.log('✅ Login successful:', response.user.email);
-        return response;
-      }
+      // authService.login đã tự động lưu access_token vào memory
+      // Bây giờ get thông tin user
+      const user = await authService.getCurrentUser();
 
-      throw new Error('Invalid response from server');
+      setUser(user);
+      setIsAuthenticated(true);
+      console.log('✅ Login successful:', user.email || user.userName);
+      return { user, ...response };
     } catch (error) {
       console.error('❌ Login failed:', error);
       throw error; // Re-throw để LoginForm có thể handle
@@ -74,7 +74,7 @@ export default function AuthProvider({ children }) {
   const logout = useCallback(async () => {
     try {
       console.log('🔓 Logging out user...');
-      await AuthService.logout();
+      await authService.logout();
 
       setUser(null);
       setIsAuthenticated(false);
@@ -94,16 +94,15 @@ export default function AuthProvider({ children }) {
   const register = useCallback(async (userData) => {
     try {
       console.log('📝 Registering new user:', userData.email);
-      const response = await AuthService.register(userData);
+      const response = await authService.register(userData);
 
-      if (response && response.user) {
-        setUser(response.user);
-        setIsAuthenticated(true);
-        console.log('✅ Registration successful:', response.user.email);
-        return response;
-      }
+      // Sau khi register, get thông tin user
+      const user = await authService.getCurrentUser();
 
-      throw new Error('Invalid response from server');
+      setUser(user);
+      setIsAuthenticated(true);
+      console.log('✅ Registration successful:', user.email || user.userName);
+      return { user, ...response };
     } catch (error) {
       console.error('❌ Registration failed:', error);
       throw error;
