@@ -39,7 +39,7 @@ export const clearAccessToken = () => {
 };
 
 /**
- * Request Interceptor
+ * Request Interceptor "người gác cổng" ở cửa đi.
  * Tự động thêm access token vào header
  */
 apiClient.interceptors.request.use(
