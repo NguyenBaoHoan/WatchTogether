@@ -9,10 +9,20 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+        /**
+         * Password encoder bean cho việc mã hoá/kiểm tra mật khẩu.
+         */
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
+
         @Bean
         public SecurityFilterChain filterChain(HttpSecurity http,
                         // qualifier to specify the CORS configuration bean
@@ -24,6 +34,8 @@ public class SecurityConfig {
                                 .authorizeHttpRequests(authz -> authz
                                                 // Cho phép preflight request
                                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                                                // Cho phép các API xác thực không cần login
+                                                .requestMatchers("/api/v1/auth/**").permitAll()
                                                 // Cho phép mọi người truy cập API tạo và tham gia phòng mà không cần
                                                 // đăng nhập.
                                                 .requestMatchers("/api/rooms/**").permitAll()

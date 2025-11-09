@@ -13,7 +13,9 @@ import lombok.Data;
 
 @RestController
 @Data
+
 public class HelloController {
+
     private final SimpMessagingTemplate messagingTemplate;
 
     private final DataSource dataSource;

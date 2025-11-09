@@ -66,7 +66,7 @@ public class RoomService {
                 participantRepository.save(host); // Thao tác này sẽ lưu object vào MySQL.
 
                 // --- BƯỚC 3: TẠO TOKEN VÀ CHUẨN BỊ RESPONSE ---
-                String accessToken = jwtService.generateToken(host);
+                String accessToken = jwtService.generateParticipantToken(host);
 
                 String joinUrl = "http://localhost:5173/room/" + roomId; // dev
                 String wsUrl = "http://localhost:8080/ws"; // SockJS http(s)
@@ -157,7 +157,7 @@ public class RoomService {
                                 .build();
                 eventPublisher.participantJoined(roomId, p);
 
-                String accessToken = jwtService.generateToken(guest);
+                String accessToken = jwtService.generateParticipantToken(guest);
 
                 // Trả về URL SockJS (http) để FE kết nối qua SockJS
                 String wsUrl = "http://localhost:8080/ws";
