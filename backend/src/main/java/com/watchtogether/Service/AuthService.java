@@ -3,10 +3,17 @@ package com.watchtogether.Service;
 import com.watchtogether.Entity.jpa.User;
 import com.watchtogether.Repository.jpa.UserRepository;
 import com.watchtogether.DTO.Request.ReqAuth;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import java.time.LocalDateTime;
+import java.util.Optional;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 @Service
 @RequiredArgsConstructor
@@ -47,5 +54,30 @@ public class AuthService {
         }
         
         return user;
+    }
+    /**
+     * Get the login of the current user.
+     *
+     * @return the login of the current user.
+     */
+    public static Optional<String> getCurrentUserLogin() {
+        SecurityContext securityContext = SecurityContextHolder.getContext();
+        return Optional.ofNullable(extractPrincipal(securityContext.getAuthentication()));
+    }
+
+    private static String extractPrincipal(Authentication authentication) {
+        if (authentication == null) {
+            return null;
+        } else if (authentication.getPrincipal() instanceof User user) {
+            // Handle User entity from JWT filter
+            return user.getEmail();
+        } else if (authentication.getPrincipal() instanceof UserDetails springSecurityUser) {
+            return springSecurityUser.getUsername();
+        } else if (authentication.getPrincipal() instanceof Jwt jwt) {
+            return jwt.getSubject();
+        } else if (authentication.getPrincipal() instanceof String s) {
+            return s;
+        }
+        return null;
     }
 }

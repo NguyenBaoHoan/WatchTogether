@@ -1,6 +1,7 @@
 package com.watchtogether.Controller;
 
 import com.watchtogether.Entity.jpa.User;
+import com.watchtogether.Repository.jpa.UserRepository;
 import com.watchtogether.Service.AuthService;
 import com.watchtogether.Service.JwtService;
 import com.watchtogether.util.CookieUtil;
@@ -11,8 +12,6 @@ import com.watchtogether.DTO.Response.ErrorResponse;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +20,8 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 public class AuthController {
+
+    private final UserRepository userRepository;
 
     private final AuthService authService;
     private final JwtService jwtService;
@@ -130,13 +131,26 @@ public class AuthController {
      * Lấy thông tin user hiện tại (đã được xác thực bằng Access Token)
      */
     @GetMapping("/account")
-    public ResponseEntity<ResAuth.UserInfo> getAccount() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
-            return ResponseEntity.status(401).body(null);
+    public ResponseEntity<?> getAccount() {
+        // Sửa lỗi 1: Call static method đúng cách
+        String email = AuthService.getCurrentUserLogin().isPresent()
+                ? AuthService.getCurrentUserLogin().get()
+                : "";
+
+        User currentUserDB = this.userRepository.findByEmail(email).orElse(null);
+
+        // Kiểm tra user có tồn tại không
+        if (currentUserDB == null) {
+            return ResponseEntity.status(401).body(new ErrorResponse("User not found", System.currentTimeMillis()));
         }
 
-        // TODO: Bạn cần implement JwtAuthenticationFilter để lấy user từ token
-        return ResponseEntity.ok(null);
+        // Sửa lỗi 2 & 3: Sử dụng builder thay vì constructor
+        ResAuth.UserInfo userLogin = ResAuth.UserInfo.builder()
+                .id(currentUserDB.getId())
+                .email(currentUserDB.getEmail())
+                .name(currentUserDB.getName())
+                .build();
+
+        return ResponseEntity.ok().body(userLogin);
     }
 }

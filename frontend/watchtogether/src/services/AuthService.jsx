@@ -13,17 +13,17 @@ export const authService = {
    */
   login: async (username, password) => {
     const response = await apiClient.post('/auth/login', {
-      userName: username, // Backend dùng userName
-      passWord: password  // Backend dùng passWord
+      email: username, // Backend dùng userName
+      password: password  // Backend dùng passWord
     });
 
-    // Lưu access token vào memory
-    if (response.data.access_token) {
-      setAccessToken(response.data.access_token);
+    // Lưu access token vào memory (Backend trả về accessToken - camelCase)
+    if (response.data.accessToken) {
+      setAccessToken(response.data.accessToken);
     }
 
     // refresh_token đã được backend set vào cookie tự động
-    
+
     return response.data;
   },
 
@@ -36,9 +36,11 @@ export const authService = {
       email: userData.email,
       password: userData.password
     });
+    if (response.data.accessToken) {
+      setAccessToken(response.data.accessToken);
+    }
     return response.data;
   },
-
   /**
    * Logout
    * Gọi API để xóa refresh_token cookie
@@ -69,11 +71,11 @@ export const authService = {
   refreshToken: async () => {
     try {
       const response = await apiClient.get('/auth/refresh');
-      
-      if (response.data.access_token) {
-        setAccessToken(response.data.access_token);
+
+      if (response.data.accessToken) {
+        setAccessToken(response.data.accessToken);
       }
-      
+
       return response.data;
     } catch (error) {
       clearAccessToken();

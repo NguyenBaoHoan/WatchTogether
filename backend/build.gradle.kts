@@ -38,7 +38,7 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.security:spring-security-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-	
+	implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     // Hỗ trợ làm việc với Redis
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     // Thư viện để tạo và xác thực JSON Web Tokens (JWT)

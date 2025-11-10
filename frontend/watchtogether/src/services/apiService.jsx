@@ -48,7 +48,7 @@ apiClient.interceptors.request.use(
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
-    
+
     console.log('🚀 Request:', config.method.toUpperCase(), config.url);
     return config;
   },
@@ -73,7 +73,7 @@ const processQueue = (error, token = null) => {
       prom.resolve(token);
     }
   });
-  
+
   failedQueue = [];
 };
 
@@ -112,22 +112,22 @@ apiClient.interceptors.response.use(
           timeout: 10000
         });
 
-        const newAccessToken = response.data.access_token;
-        
+        const newAccessToken = response.data.accessToken;
+
         // Lưu access token mới
         setAccessToken(newAccessToken);
-        
+
         // Xử lý các request đang chờ
         processQueue(null, newAccessToken);
-        
+
         // Retry original request với token mới
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return apiClient(originalRequest);
-        
+
       } catch (refreshError) {
         processQueue(refreshError, null);
         clearAccessToken();
-        
+
         // Redirect về login
         window.location.href = '/login';
         return Promise.reject(refreshError);

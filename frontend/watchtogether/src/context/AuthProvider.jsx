@@ -20,18 +20,52 @@ export default function AuthProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true); // True lúc đầu để verify token
 
   // ============================================
-  // 🔓 VERIFY TOKEN ON APP LOAD
+  // 🔓 VERIFY TOKEN ON APP LOAD (ENTERPRISE PATTERN)
   // ============================================
   useEffect(() => {
     const verifyUserToken = async () => {
+      // ⭐ ĐỊNH NGHĨA PUBLIC ROUTES (không cần authentication)
+      const publicRoutes = ['/', '/about', '/contact'];
+      const currentPath = window.location.pathname;
+
+      // ⭐ Bỏ qua verify nếu đang ở public route
+      const isPublicRoute = publicRoutes.some(route =>
+        currentPath === route || currentPath.startsWith(route + '/')
+      );
+
+      if (isPublicRoute) {
+        console.log('⏭️ Skip verification on public route:', currentPath);
+        setIsLoading(false);
+        return;
+      }
+
       try {
         console.log('🔍 Verifying authentication token...');
+
+        // ⭐ BƯỚC 1: Thử refresh token trước (từ HttpOnly cookie)
+        // Nếu có refresh_token cookie, backend sẽ generate access_token mới
+        try {
+          console.log('🔄 Attempting to refresh access token...');
+          const refreshResponse = await authService.refreshToken();
+
+          if (refreshResponse && refreshResponse.accessToken) {
+            console.log('✅ Access token refreshed successfully');
+            // refreshToken() đã set access token vào memory rồi
+          }
+        } catch (refreshError) {
+          console.log('⚠️ No valid refresh token found:', refreshError.message);
+          // Không có refresh token hoặc đã expired → user chưa login
+          setIsLoading(false);
+          return;
+        }
+
+        // ⭐ BƯỚC 2: Giờ mới gọi getCurrentUser() với access token mới
         const response = await authService.getCurrentUser();
 
         if (response) {
           setUser(response);
           setIsAuthenticated(true);
-          console.log('✅ User authenticated:', response.email || response.userName);
+          console.log('✅ User authenticated:', response.email || response.name);
         }
       } catch (error) {
         console.log('❌ Token verification failed:', error.message);
@@ -44,9 +78,7 @@ export default function AuthProvider({ children }) {
     };
 
     verifyUserToken();
-  }, []);
-
-  // ============================================
+  }, []);  // ============================================
   // 🔐 LOGIN FUNCTION
   // ============================================
   const login = useCallback(async (username, password) => {

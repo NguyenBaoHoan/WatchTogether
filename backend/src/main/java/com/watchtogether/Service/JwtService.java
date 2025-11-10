@@ -127,7 +127,7 @@ public class JwtService {
                 .getBody();
     }
 
-    private <T> T extractClaim(String token, Function<Claims, T> resolver) {
+    public <T> T extractClaim(String token, Function<Claims, T> resolver) {
         return resolver.apply(extractAllClaims(token));
     }
     
