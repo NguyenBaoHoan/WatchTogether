@@ -29,9 +29,9 @@ export default function LoginPage() {
   // ✅ HANDLE LOGIN SUCCESS
   // ============================================
   const handleLoginSuccess = () => {
-    console.log('✅ Login successful, redirecting to home...');
-    // Redirect về trang chủ sau khi login thành công
-    navigate('/', { replace: true });
+    console.log('✅ Login successful, redirecting to dashboard...');
+    // Redirect về trang Dashboard sau khi login thành công
+    navigate('/dashboard', { replace: true });
   };
 
   // ============================================
