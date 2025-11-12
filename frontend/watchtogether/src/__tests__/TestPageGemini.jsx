@@ -4,7 +4,7 @@ import SockJS from 'sockjs-client';
 
 // --- Cấu hình ---
 const SOCKJS_URL = 'http://localhost:8080/ws'; // Thay đổi nếu cần
-const ROOM_ID = 'd42708fd-1b53-47a4-870f-071a5bf9044f'; // Hardcode một ID phòng
+const ROOM_ID = '947a5102-3f39-4309-b3be-5f549a5bc7cd'; // Hardcode một ID phòng
 const DEFAULT_VIDEO_URL = 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
 // -----------------
 
@@ -13,7 +13,7 @@ function TestPageGemini() {
   const [logs, setLogs] = useState([]);
   const [videoUrl, setVideoUrl] = useState(DEFAULT_VIDEO_URL);
   const [newVideoUrl, setNewVideoUrl] = useState('');
-  
+
   const videoRef = useRef(null);
   // Cờ này để phân biệt sự kiện do người dùng (local) hay do server (remote)
   const isLocalChange = useRef(true);
@@ -130,11 +130,11 @@ function TestPageGemini() {
   const handleSyncState = (event) => {
     const video = videoRef.current;
     if (!video) return;
-    
+
     isLocalChange.current = false;
     setVideoUrl(event.videoUrl);
     video.load();
-    
+
     // Phải chờ video load xong metadata mới seek được
     const onLoadedMetadata = () => {
       video.currentTime = event.currentTime;
@@ -146,7 +146,7 @@ function TestPageGemini() {
       setTimeout(() => { isLocalChange.current = true; }, 150);
       video.removeEventListener('loadedmetadata', onLoadedMetadata);
     };
-    
+
     video.addEventListener('loadedmetadata', onLoadedMetadata);
   };
 
@@ -162,7 +162,7 @@ function TestPageGemini() {
   const handleLocalSeeked = () => {
     if (isLocalChange.current) sendVideoEvent('SEEK');
   };
-  
+
   const handleLocalChangeVideo = () => {
     if (newVideoUrl && newVideoUrl !== videoUrl) {
       sendVideoEvent('CHANGE', { videoUrl: newVideoUrl });
@@ -176,7 +176,7 @@ function TestPageGemini() {
         Video Sync Tester 📹
       </h1>
       <h3 className={`text-xl mb-4 ${stompClient ? 'text-green-600' : 'text-red-600'}`}>
-        Room: <span className="font-mono">{ROOM_ID}</span> | 
+        Room: <span className="font-mono">{ROOM_ID}</span> |
         Trạng thái: {stompClient ? 'ĐÃ KẾT NỐI' : 'ĐANG KẾT NỐI...'}
       </h3>
 

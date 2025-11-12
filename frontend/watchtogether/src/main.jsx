@@ -12,7 +12,7 @@ import DashboardPage from './pages/DashboardPage.jsx'
 import ProtectedRoute from './components/features/ProtectedRoute.jsx'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { TestWebSocket } from './pages/TestWebSocket.jsx'
-import TestPage from './__tests__/TestPage.jsx'
+
 import TestPageGemini from './__tests__/TestPageGemini.jsx'
 
 const router = createBrowserRouter([
@@ -30,8 +30,7 @@ const router = createBrowserRouter([
           </ProtectedRoute>
         ) 
       },
-      { path: "/ws-test", element: <TestWebSocket /> },
-      { path: "/test", element: <TestPage /> },
+      
       { path: "/testgemini", element: <TestPageGemini /> }
     ],
   },
