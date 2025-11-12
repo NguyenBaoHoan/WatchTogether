@@ -9,7 +9,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { AuthContext } from './AuthContext';
-import { authService } from '../services/authService';
+import { authService } from '../services/AuthService';
 
 export default function AuthProvider({ children }) {
   // ============================================
