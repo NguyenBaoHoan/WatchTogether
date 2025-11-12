@@ -92,19 +92,26 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer, WebSoc
                     }
                 }
 
+                // ⭐ NẾU CÓ TOKEN → Validate và lưu thông tin
                 if (token != null && jwtService.validateToken(token)) {
                     String participantId = jwtService.extractParticipantId(token);
                     String roomId = jwtService.extractRoomId(token);
                     attributes.put("participantId", participantId);
                     attributes.put("roomId", roomId);
                     log.info("✅ WebSocket handshake success: participant {} joined room {}", participantId, roomId);
-                    return true;
+                } else {
+                    // ⭐ KHÔNG CÓ TOKEN → Vẫn cho phép kết nối (Guest mode)
+                    log.warn("⚠️ WebSocket handshake: No token provided, connecting as guest");
+                    attributes.put("participantId", "guest-" + System.currentTimeMillis());
+                    attributes.put("roomId", "unknown");
                 }
-                log.warn("❌ WebSocket handshake failed: Missing or invalid token");
-                return false;
+                
+                // ✅ Luôn return true để cho phép kết nối
+                return true;
+                
             } catch (Exception e) {
                 log.error("🚨 Error during WebSocket handshake", e);
-                return false;
+                return false; // Chỉ reject nếu có lỗi exception
             }
         }
 
