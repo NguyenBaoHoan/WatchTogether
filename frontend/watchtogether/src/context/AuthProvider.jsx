@@ -10,6 +10,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { AuthContext } from './AuthContext';
 import { authService } from '../services/AuthService';
+import { getAccessToken } from '../services/apiService';
+import { extractUserFromToken } from '../utils/jwtHelper';
 
 export default function AuthProvider({ children }) {
   // ============================================
@@ -25,7 +27,7 @@ export default function AuthProvider({ children }) {
   useEffect(() => {
     const verifyUserToken = async () => {
       // ⭐ ĐỊNH NGHĨA PUBLIC ROUTES (không cần authentication)
-      const publicRoutes = ['/', '/about', '/contact'];
+      const publicRoutes = ['/', '/login', '/register', '/about', '/contact'];
       const currentPath = window.location.pathname;
 
       // ⭐ Bỏ qua verify nếu đang ở public route
@@ -87,13 +89,32 @@ export default function AuthProvider({ children }) {
       const response = await authService.login(username, password);
 
       // authService.login đã tự động lưu access_token vào memory
-      // Bây giờ get thông tin user
-      const user = await authService.getCurrentUser();
+      // Lấy access token và decode để lấy thông tin user
+      const accessToken = getAccessToken();
+      let userData = null;
 
-      setUser(user);
+      if (accessToken) {
+        // Extract user info từ JWT token
+        const tokenData = extractUserFromToken(accessToken);
+        
+        if (tokenData) {
+          userData = {
+            name: tokenData.name,
+            email: tokenData.email,
+            userId: tokenData.userId,
+          };
+        }
+      }
+
+      // Fallback: Nếu không decode được, gọi API getCurrentUser
+      if (!userData) {
+        userData = await authService.getCurrentUser();
+      }
+
+      setUser(userData);
       setIsAuthenticated(true);
-      console.log('✅ Login successful:', user.email || user.userName);
-      return { user, ...response };
+      console.log('✅ Login successful:', userData.name || userData.email);
+      return { user: userData, ...response };
     } catch (error) {
       console.error('❌ Login failed:', error);
       throw error; // Re-throw để LoginForm có thể handle

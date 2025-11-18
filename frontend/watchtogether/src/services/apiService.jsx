@@ -85,8 +85,11 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Nếu 401 và chưa retry
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // ⭐ GUARD: Không retry nếu là auth endpoints để tránh loop
+    const isAuthEndpoint = originalRequest.url?.includes('/auth/');
+    
+    // Nếu 401 và chưa retry và KHÔNG phải auth endpoint
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       // Nếu đang refresh, đợi
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -128,8 +131,12 @@ apiClient.interceptors.response.use(
         processQueue(refreshError, null);
         clearAccessToken();
 
-        // Redirect về login
-        window.location.href = '/login';
+        // ⭐ CHỈ redirect nếu KHÔNG đang ở trang login/register
+        const currentPath = window.location.pathname;
+        if (currentPath !== '/login' && currentPath !== '/register') {
+          window.location.href = '/login';
+        }
+        
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
