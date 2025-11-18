@@ -39,13 +39,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer, WebSoc
         // Định nghĩa broker nội bộ dùng để gửi thông điệp đến client
         // /topic → gửi broadcast chung (ví dụ gửi cho cả room)
         // /queue → gửi riêng cho từng user
-        config.enableSimpleBroker("/topic", "/queue");
+        config.enableSimpleBroker("/topic");
 
         // Các endpoint client gửi lên server phải bắt đầu bằng /app
         config.setApplicationDestinationPrefixes("/app");
 
-        // Đường dẫn gửi riêng đến từng user (gắn với convertAndSendToUser)
-        config.setUserDestinationPrefix("/user");
     }
 
     @Override
