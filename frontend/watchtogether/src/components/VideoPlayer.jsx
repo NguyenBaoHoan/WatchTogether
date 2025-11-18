@@ -1,10 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import YouTube from 'react-youtube';
 
-const VideoPlayer = ({ videoId, isPlaying, timestamp, onStateChange, onPlayerInstance, isSynced }) => {
+const VideoPlayer = ({ videoId, isPlaying, timestamp, onStateChange, onPlayerInstance }) => {
     // Lưu trữ instance của YouTube Player để gọi lệnh (play/pause/seek)
     const playerRef = useRef(null);
     const [isReady, setIsReady] = useState(false);
+    // Lưu videoId cũ để so sánh
+    const prevVideoIdRef = useRef(videoId);
     // THÊM BIẾN NÀY: Cờ để chặn loop
     const isRemoteUpdate = useRef(false);
     // Timer để xử lý Debounce (Trì hoãn) cho sự kiện Pause
@@ -32,77 +34,80 @@ const VideoPlayer = ({ videoId, isPlaying, timestamp, onStateChange, onPlayerIns
         },
     };
 
-    // 2. HÀM onReady: Nơi thực hiện cú Sync đầu tiên (First Sync)
+
+    // Hàm được gọi khi Player tải xong API
     const onReady = (event) => {
         console.log("YouTube Player Ready!");
         playerRef.current = event.target;
         setIsReady(true);
-
-        // Gửi instance ra ngoài cho App
+        // 2. Gửi cái điều khiển này ra ngoài cho App dùng
         if (onPlayerInstance) {
             onPlayerInstance(event.target);
         }
+        // Thực hiện đồng bộ (Seek + Play/Pause) ngay khi sẵn sàng
+        try {
+            isRemoteUpdate.current = true; // Bật cờ chặn loop
 
-        // --- THỰC HIỆN SYNC NGAY LẬP TỨC NẾU ĐÃ ĐƯỢC PHÉP (isSynced=true) ---
-        if (isSynced) {
-            console.log("Performing First Sync inside onReady...");
-            try {
-                isRemoteUpdate.current = true;
-                // Seek trước
-                event.target.seekTo(timestamp, true);
-                // Play/Pause sau
-                if (isPlaying) {
-                    event.target.playVideo();
-                } else {
-                    event.target.pauseVideo();
-                }
-                // Tắt cờ sau 1s
-                setTimeout(() => { isRemoteUpdate.current = false; }, 1000);
-            } catch (e) {
-                console.error("Error first sync:", e);
+            // Seek đến đúng thời gian
+            playerRef.current.seekTo(timestamp, true);
+
+            // Đặt đúng trạng thái Play/Pause
+            if (isPlaying) {
+                playerRef.current.playVideo();
+            } else {
+                playerRef.current.pauseVideo();
             }
+
+            // Tắt cờ sau 1 giây
+            setTimeout(() => {
+                isRemoteUpdate.current = false;
+            }, 1000);
+
+        } catch (e) {
+            console.error("Lỗi khi đồng bộ lần đầu (onReady):", e);
         }
     };
 
-    // 3. useEffect: Xử lý các lần Sync tiếp theo (khi Host thao tác)
+    // Xử lý đồng bộ từ Server -> Client
     // eslint-disable-next-line react-hooks/rules-of-hooks
     useEffect(() => {
-        // Chỉ chạy nếu Player đã sẵn sàng VÀ đã được phép Sync
-        if (!isReady || !playerRef.current || !isSynced) {
+        // Chỉ chạy nếu Player đã sẵn sàng (đã qua onReady)
+        if (!isReady || !playerRef.current) {
             return;
         }
-
-        console.log("Syncing state update:", { isPlaying, timestamp });
-
-        isRemoteUpdate.current = true;
+        if (prevVideoIdRef.current !== videoId) {
+            console.log("Detected Video Change: Skipping Sync to allow loading...");
+            // Cập nhật lại ref thành video mới
+            prevVideoIdRef.current = videoId;
+            // QUAN TRỌNG: Return ngay lập tức! 
+            // Không cho phép code phía dưới chạy (lệnh seek/pause) khi đang load video mới.
+            // react-youtube sẽ tự động load video mới, đừng can thiệp lúc này.
+            return;
+        }
         try {
-            const player = playerRef.current;
-            const playerState = player.getPlayerState();
-            const currentTime = player.getCurrentTime();
+            isRemoteUpdate.current = true;
+            const playerState = playerRef.current.getPlayerState();
 
-            // 1. Đồng bộ Time (Seek)
-            // Chỉ seek nếu lệch quá 1.5s để tránh giật cục
-            if (Math.abs(currentTime - timestamp) > 1.5) {
-                console.log(`Seeking to ${timestamp}`);
-                player.seekTo(timestamp, true);
-            }
-
-            // 2. Đồng bộ Play/Pause
             if (isPlaying && playerState !== 1) {
-                player.playVideo();
+                playerRef.current.playVideo();
             } else if (!isPlaying && playerState === 1) {
-                player.pauseVideo();
+                playerRef.current.pauseVideo();
             }
 
+            const currentTime = playerRef.current.getCurrentTime();
+            if (Math.abs(currentTime - timestamp) > 1.5) { // Tăng lên 1.5s
+                playerRef.current.seekTo(timestamp, true);
+            }
+
+            setTimeout(() => {
+                isRemoteUpdate.current = false;
+            }, 500);
         } catch (e) {
-            console.error("Lỗi khi đang sync (useEffect):", e);
+            console.error("Lỗi khi đồng bộ video (useEffect):", e);
         }
 
-        setTimeout(() => {
-            isRemoteUpdate.current = false;
-        }, 500);
+    }, [isPlaying, timestamp, isReady, videoId]); // Bỏ isReady, chỉ phụ thuộc vào state từ server
 
-    }, [isPlaying, timestamp, isReady, isSynced]);
     // Xử lý sự kiện người dùng bấm trên Player (Client -> Server)
     const handleStateChange = (event) => {
         if (isRemoteUpdate.current) return;
@@ -131,16 +136,12 @@ const VideoPlayer = ({ videoId, isPlaying, timestamp, onStateChange, onPlayerIns
         // 3 = BUFFERING -> KHÔNG LÀM GÌ CẢ. 
         // Vì sau khi buffer xong, nó sẽ tự nhảy sang 1 hoặc 2.
     };
-    // BẢO VỆ CHỐNG CRASH: Nếu không có videoId, không render YouTube Player
-    if (!videoId) {
-        return (
-            <div className="relative w-full pt-[56.25%] bg-gray-900 rounded-lg overflow-hidden shadow-xl flex items-center justify-center">
-                <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center text-white">
-                    <p>Vui lòng nhập link video...</p>
-                </div>
-            </div>
-        );
-    }
+    // Xử lý lỗi nội bộ của Player (để tránh crash App)
+    const onError = (e) => {
+        console.warn("YouTube Player Error:", e.data);
+    };
+
+    if (!videoId) return <div className="bg-black w-full pt-[56.25%]" />;
 
     return (
         <div className="relative w-full pt-[56.25%] bg-black rounded-lg overflow-hidden shadow-xl">
@@ -152,8 +153,7 @@ const VideoPlayer = ({ videoId, isPlaying, timestamp, onStateChange, onPlayerIns
                     onStateChange={handleStateChange}
                     className="w-full h-full" // Class cho iframe
                     iframeClassName="w-full h-full" // Class cho thẻ iframe thực tế
-                    // Thêm Key để reset component khi đổi video
-                    key={videoId}
+                    onError={onError} // Thêm bắt lỗi
                 />
             </div>
         </div>

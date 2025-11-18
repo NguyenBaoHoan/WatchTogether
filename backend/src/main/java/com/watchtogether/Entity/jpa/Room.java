@@ -1,15 +1,25 @@
 package com.watchtogether.Entity.jpa;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.hibernate.annotations.IdGeneratorType;
+
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Transient;
 
 @Data
 @Entity
+@AllArgsConstructor
 public class Room {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String roomId;
     private String hostSessionId; // Session ID của người chủ phòng
     private String hostName;
@@ -24,6 +34,7 @@ public class Room {
     private List<String> users = new ArrayList<>();
     
     // Hàng chờ video (Queue)
+    @Transient
     private List<VideoItem> queue = new ArrayList<>();
 
     public Room(String roomId) {
