@@ -28,7 +28,7 @@ export const decodeJWT = (token) => {
         // Decode payload (phần giữa)
         const payload = parts[1];
 
-        // Base64 decode (cần thêm padding nếu thiếu)
+        // Base64 decjode (cần thêm padding nếu thiếu)
         const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
         const paddedBase64 = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
 
