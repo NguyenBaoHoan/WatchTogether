@@ -14,6 +14,8 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { TestWebSocket } from './pages/TestWebSocket.jsx'
 import TestPage from './__tests__/TestPage.jsx'
 import TestPageGemini from './__tests__/TestPageGemini.jsx'
+import JoinPage from './pages/JoinPage.jsx'
+import RoomPageJPA from './pages/RoomPageJPA.jsx'
 
 const router = createBrowserRouter([
   {
@@ -22,17 +24,22 @@ const router = createBrowserRouter([
       { path: '/', element: <HomePage /> },
       { path: '/login', element: <LoginPage /> },
       { path: '/register', element: <RegisterPage /> },
-      { 
-        path: '/dashboard', 
+      {
+        path: '/dashboard',
         element: (
           <ProtectedRoute>
             <DashboardPage />
           </ProtectedRoute>
-        ) 
+        )
       },
       { path: "/ws-test", element: <TestWebSocket /> },
       { path: "/test", element: <TestPage /> },
-      { path: "/testgemini", element: <TestPageGemini /> }
+      { path: "/testgemini", element: <TestPageGemini /> },
+      { path: "/join", element: <JoinPage /> },
+      {
+        path: 'room/:roomId',
+        element: <RoomPageJPA />
+      }
     ],
   },
   { path: 'room/:roomId', element: <RoomRoute /> }

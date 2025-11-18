@@ -16,7 +16,7 @@ import { useRoom } from '../hooks/useRoom';
 const DashboardPage = () => {
     const navigate = useNavigate();
     const { user, logout } = useAuth();
-    const { createRoom, isLoading } = useRoom();
+    const {  isLoading } = useRoom();
 
     // State quản lý lịch sử phòng (mock data - sau này sẽ fetch từ API)
     const [roomHistory] = useState([
@@ -32,13 +32,10 @@ const DashboardPage = () => {
     // Xử lý tạo phòng mới
     const handleCreateRoom = async () => {
         try {
-            const roomData = await createRoom();
-            if (roomData?.roomId) {
-                navigate(`/room/${roomData.roomId}`);
-            }
+            navigate('/join');
         } catch (error) {
-            console.error('Lỗi khi tạo phòng:', error);
-            alert('Không thể tạo phòng. Vui lòng thử lại!');
+            console.error(error);
+            alert('Vui lòng thử lại!');
         }
     };
 
