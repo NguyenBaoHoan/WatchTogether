@@ -33,7 +33,7 @@ export default function RegisterPage() {
         console.log('✅ Registration successful, redirecting to home...');
         // Redirect về trang chủ sau khi register thành công
         // User đã được auto-login sau khi register (backend set JWT cookie)
-        navigate('/', { replace: true });
+        navigate('/dashboard', { replace: true });
     };
 
     // ============================================
