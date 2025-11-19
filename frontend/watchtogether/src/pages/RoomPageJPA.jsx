@@ -4,6 +4,7 @@ import { useWebSocket } from '../hooks/useWebsocket'; // Đảm bảo đường 
 import VideoPlayer from '../components/VideoPlayer'; // Đảm bảo đường dẫn đúng
 import ChatBox from '../components/ChatBox'; // Đảm bảo đường dẫn đúng
 import { ToastContainer, toast } from 'react-toastify';
+import { useAuth } from '../hooks/useAuth';
 
 const RoomPageJPA = () => {
     // 1. Lấy RoomID từ URL và Username từ state
@@ -11,17 +12,28 @@ const RoomPageJPA = () => {
     const location = useLocation();
     const navigate = useNavigate();
 
-    // State "username" được truyền từ JoinPage
-    const [username] = useState(location.state?.username || '');
+    // Xác định username: Lấy từ state (nếu từ JoinPage qua) HOẶC từ Auth (nếu đã login)
+    const [username, setUsername] = useState(location.state?.username || user?.name || user?.email || '');
 
-    // 2. Kiểm tra nếu vào thẳng link mà không có username
+
+    // 2. Lấy thông tin user từ Auth Context (ưu tiên này hơn)
+    const { user, isLoading } = useAuth();
+
+    // 3. Cập nhật username khi user load xong (trường hợp F5 lại trang)
     useEffect(() => {
-        if (!username) {
-            toast.error("Vui lòng tham gia từ trang join!");
-            navigate('/join'); // Đẩy về trang join
+        if (user?.name || user?.email) {
+            setUsername(user.name || user.email);
         }
-    }, [username, navigate]);
+    }, [user]);
 
+    // 4. Logic bảo vệ: Chỉ đá về Join nếu KHÔNG có username VÀ KHÔNG đang loading user
+    useEffect(() => {
+        if (!isLoading && !username && !user) {
+            toast.info("Vui lòng nhập tên để tham gia phòng!");
+            // Quan trọng: Truyền roomId về để JoinPage biết
+            navigate('/join', { state: { targetRoomId: roomId } });
+        }
+    }, [username, user, isLoading, navigate, roomId]);
     // --- TOÀN BỘ LOGIC STATE VÀ HÀM TỪ APP.JSX CŨ ---
     // Room State
     const [messages, setMessages] = useState([]);
@@ -101,31 +113,56 @@ const RoomPageJPA = () => {
             videoId: data.videoId || prev.videoId
         }));
     };
-    // Xử lý tin nhắn Chat & Thông tin phòng
-    const handleChatMessage = (msg) => {
-        // Nếu là tin nhắn thông tin phòng (khi mới join)
-        if (msg.hostName) {
-            // 2. CẬP NHẬT TÊN HOST VÀO STATE
-            setHostName(msg.hostName);
-            // Kiểm tra xem mình có phải host không
-            if (msg.hostName === username) {
+
+    // --- LOGIC MỚI: FETCH LỊCH SỬ CHAT TỪ DATABASE ---
+    useEffect(() => {
+        if (roomId && username) {
+            console.log("Fetching chat history for room:", roomId);
+            fetch(`http://localhost:8080/api/chat/history?roomId=${roomId}`)
+                .then(res => {
+                    if (!res.ok) throw new Error("Network response was not ok");
+                    return res.json();
+                })
+                .then(data => {
+                    console.log("Chat history loaded:", data);
+                    setMessages(data); // Nạp toàn bộ tin nhắn cũ vào state
+                })
+                .catch(err => console.error("Failed to fetch chat history:", err));
+        }
+    }, [roomId, username]); // Chỉ chạy khi roomId hoặc username có giá trị (lúc mới vào)
+
+    // Callback riêng để xử lý thông tin phòng (Host, Video đang phát...)
+    const handleRoomInfo = (roomData) => {
+        console.log("Received Room Info:", roomData);
+
+        // 1. Cập nhật Host Name
+        if (roomData.hostName) {
+            setHostName(roomData.hostName);
+
+            // Kiểm tra xem mình có phải Host không
+            // So sánh với username hiện tại (hoặc email nếu bạn dùng email làm định danh)
+            if (roomData.hostName === username) {
                 setIsHost(true);
-                setIsSynced(true); // Host thì luôn luôn Sync
+                setIsSynced(true);
                 toast.info("Bạn là chủ phòng!");
             } else {
                 setIsHost(false);
-                setIsSynced(false); // Khách mới vào -> Chưa Sync
+                setIsSynced(false);
             }
-            // Cập nhật video đang phát trong phòng luôn (nhưng chưa chạy)
-            setVideoState(prev => ({
-                ...prev,
-                videoId: msg.currentVideoId || prev.videoId || 'M7lc1UVf-VE',
-                timestamp: msg.currentTime,
-                isPlaying: false // Mới vào bắt buộc dừng
-            }));
-        } else {
-            setMessages(prev => [...prev, msg]);
         }
+
+        // 2. Cập nhật Video State (để người mới vào sync ngay)
+        setVideoState(prev => ({
+            ...prev,
+            videoId: roomData.currentVideoId || 'M7lc1UVf-VE',
+            timestamp: roomData.currentTime || 0,
+            isPlaying: roomData.isPlaying || false
+        }));
+    };
+    // Callback riêng để xử lý Chat
+    const handleChatMessage = (msg) => {
+        // Chỉ thêm tin nhắn vào list
+        setMessages(prev => [...prev, msg]);
     };
 
     // Hook khởi tạo kết nối
@@ -133,7 +170,8 @@ const RoomPageJPA = () => {
         roomId,
         username,
         handleVideoAction,
-        handleChatMessage
+        handleChatMessage,
+        handleRoomInfo
     );
 
     const onPlayerStateChange = (type, currentTime) => {
