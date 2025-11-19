@@ -26,6 +26,10 @@ public class AuthService {
      * Đăng ký người dùng mới
      */
     public User register(ReqAuth request) throws Exception {
+        
+        if (userRepository.existsByName(request.getName())) {
+            throw new Exception("Username is already taken");
+        }
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new Exception("Email is already taken");
         }
@@ -52,9 +56,10 @@ public class AuthService {
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new Exception("Invalid email or password");
         }
-        
+
         return user;
     }
+
     /**
      * Get the login of the current user.
      *
