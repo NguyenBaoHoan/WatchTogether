@@ -68,8 +68,8 @@ export default function LoginForm({ onSuccess, onSwitchToRegister }) {
     // Password validation
     if (!formData.password) {
       newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+    } else if (formData.password.length < 3) {
+      newErrors.password = 'Password must be at least 3 characters';
     }
 
     setErrors(newErrors);
