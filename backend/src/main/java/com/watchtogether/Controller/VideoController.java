@@ -1,5 +1,6 @@
 package com.watchtogether.Controller;
 
+import com.watchtogether.DTO.RoomDTO;
 import com.watchtogether.DTO.VideoAction;
 import com.watchtogether.Entity.jpa.Room;
 import com.watchtogether.Service.RoomServiceJPA;
@@ -25,15 +26,31 @@ public class VideoController {
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
-    // Client gửi: /app/room/{roomId}/joinc
+    // Client gửi: /app/room/{roomId}/join
     @MessageMapping("/room/{roomId}/join")
     @SendTo("/topic/room/{roomId}")
-    public Room joinRoom(@DestinationVariable String roomId, @Payload String username,
-            SimpMessageHeaderAccessor headerAccessor) {
-        // INFO: Dùng cho các sự kiện bình thường, thành công
+    // SỬA LỖI TẠI ĐÂY: Thêm ("roomId") vào @DestinationVariable
+    public RoomDTO joinRoom(@DestinationVariable("roomId") String roomId, 
+                            @Payload String username,
+                            SimpMessageHeaderAccessor headerAccessor) {
+        
         log.info("REQUEST JOIN ROOM | RoomId: {} | User: {}", roomId, username);
         String sessionId = headerAccessor.getSessionId();
-        return roomService.joinRoom(roomId, username, sessionId);
+        
+        // Lấy Room Entity từ Service
+        Room room = roomService.joinRoom(roomId, username, sessionId);
+
+        // --- LOG KIỂM TRA HOSTNAME ---
+        String hostName = (room.getHost() != null) ? room.getHost().getName() : "NULL";
+        log.info("DEBUG HOST INFO | Room: {} | Host Object: {} | HostName: {}", 
+                 room.getRoomId(), 
+                 (room.getHost() != null ? "EXIST" : "NULL"), 
+                 hostName);
+        // -----------------------------
+
+        // Convert sang DTO để đảm bảo Frontend nhận được field hostName
+        // và tránh lỗi vòng lặp vô tận của Jackson
+        return RoomDTO.fromEntity(room);
     }
 
     // Client gửi: /app/video/action (Play/Pause/Seek)
@@ -68,6 +85,7 @@ public class VideoController {
     @MessageMapping("/video/sync")
     public void handleSync(@Payload VideoAction action) {
         // Broadcast trạng thái hiện tại cho tất cả
+        log.info("SYNC REQUEST | User: {} | Action: {}", action.getUsername(), action.getType());
         messagingTemplate.convertAndSend("/topic/room/" + action.getRoomId() + "/sync", action);
     }
 }
