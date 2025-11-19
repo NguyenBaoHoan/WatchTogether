@@ -4,16 +4,18 @@ import SockJS from 'sockjs-client';
 
 const SOCKET_URL = 'http://localhost:8080/ws';
 
-export const useWebSocket = (roomId, username, onVideoAction, onChatMessage) => {
+export const useWebSocket = (roomId, username, onVideoAction, onChatMessage,onRoomInfo) => {
     const stompClientRef = useRef(null);
     const [isConnected, setIsConnected] = useState(false);
     // Dùng ref để lưu callback, tránh re-connect lặp vô tận
     const onVideoActionRef = useRef(onVideoAction);
     const onChatMessageRef = useRef(onChatMessage);
+    const onRoomInfoRef = useRef(onRoomInfo); // Thêm ref
     useEffect(() => {
         onVideoActionRef.current = onVideoAction;
         onChatMessageRef.current = onChatMessage;
-    }, [onVideoAction, onChatMessage]);
+        onRoomInfoRef.current = onRoomInfo;
+    }, [onVideoAction, onChatMessage,onRoomInfo]);
     useEffect(() => {
         if (!roomId || !username) return;
 
@@ -50,8 +52,8 @@ export const useWebSocket = (roomId, username, onVideoAction, onChatMessage) => 
                     console.log("Room Info:", roomInfo); // Debug xem có hostName không
 
                     // Gọi hàm callback này để App.jsx cập nhật state
-                    if (onChatMessageRef.current) {
-                        onChatMessageRef.current(roomInfo);
+                    if (onRoomInfoRef.current) {
+                        onRoomInfoRef.current(roomInfo); // Gọi callback mới
                     }
                 });
             },
@@ -104,7 +106,8 @@ export const useWebSocket = (roomId, username, onVideoAction, onChatMessage) => 
             const payload = {
                 type: "CHAT",
                 content: content,
-                sender: username
+                sender: username, 
+                roomId: roomId
             };
             try {
                 client.publish({
@@ -115,7 +118,7 @@ export const useWebSocket = (roomId, username, onVideoAction, onChatMessage) => 
                 console.error("Lỗi khi gửi tin nhắn:", error);
             }
         } else {
-            console.warn("Chưa kết nối WebSocket, không thể chat!");
+            console.warn("Chưa kết nối WebSocket, không thể chat!", client);
         }
     };
 
