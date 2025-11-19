@@ -1,43 +1,67 @@
 package com.watchtogether.Entity.jpa;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import java.util.ArrayList;
+import lombok.*;
+import jakarta.persistence.*;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
-import org.hibernate.annotations.IdGeneratorType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Transient;
+import java.util.ArrayList;
 
 @Data
 @Entity
+@Table(name = "rooms")
+@NoArgsConstructor
 @AllArgsConstructor
 public class Room {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String roomId;
-    private String hostSessionId; // Session ID của người chủ phòng
-    private String hostName;
-    
-    // Trạng thái Player hiện tại
-    private int currPlayer = 0; // 0: YouTube, 1: DailyMotion, etc.
-    private String currentVideoId = "M7lc1UVf-VE"; 
+    private String roomId; // input Frontend will create this ID
+
+    // Tên phòng do người dùng đặt
+    @Column(name = "room_name")
+    private String roomName;
+
+    // Quan hệ với chủ phòng
+    @ManyToOne
+    @JoinColumn(name = "host_id")
+    private User host;
+
+    private int currPlayer = 0;
+    private String currentVideoId = "M7lc1UVf-VE";
     private boolean isPlaying = false;
+
+    @Column(name = "current_time_value")
     private double currentTime = 0.0;
 
-    // Danh sách người dùng trong phòng
-    private List<String> users = new ArrayList<>();
-    
-    // Hàng chờ video (Queue)
-    @Transient
-    private List<VideoItem> queue = new ArrayList<>();
+    // Thay thế List<String> users bằng bảng liên kết RoomParticipant
+    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<RoomParticipant> participants = new ArrayList<>();
+
+    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<ChatMessage> chatMessages = new ArrayList<>();
 
     public Room(String roomId) {
         this.roomId = roomId;
+    }
+
+    // --- THÊM LẠI QUEUE ĐỂ KHÔNG BỊ LỖI CODE CŨ ---
+    // Dùng @Transient để chỉ lưu trên RAM, không lưu DB (tránh lỗi Mapping
+    // Exception)
+    @Transient
+    private List<VideoItem> queue = new ArrayList<>();
+
+    public void addParticipant(RoomParticipant participant) {
+        participants.add(participant);
+        participant.setRoom(this);
+    }
+
+    public void removeParticipant(RoomParticipant participant) {
+        participants.remove(participant);
+        participant.setRoom(null);
+    }
+    public String getHostName() {
+        return host != null ? host.getName() : null;
     }
 }

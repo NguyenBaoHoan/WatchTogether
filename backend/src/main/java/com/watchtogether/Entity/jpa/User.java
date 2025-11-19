@@ -1,24 +1,17 @@
 package com.watchtogether.Entity.jpa;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import lombok.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-// Đặt tên bảng là "users" (PostgreSQL thường dùng chữ thường)
-@Table(name = "users") 
+@Table(name = "users")
 public class User {
 
     @Id
@@ -26,20 +19,24 @@ public class User {
     private String id;
 
     @Column(nullable = false)
-    private String name; // Tên hiển thị
+    private String name;
 
     @Column(nullable = false, unique = true)
     private String email;
 
     @Column(name = "password_hash", nullable = false)
-    private String password; 
+    private String password;
 
-    @Column(name = "created_at", updatable = false)
+    // --- SỬA LỖI Ở ĐÂY ---
+    @OneToMany(mappedBy = "sender")
+    @JsonIgnore // Tránh lỗi vòng lặp khi chuyển sang JSON
+    @ToString.Exclude // <--- THÊM DÒNG NÀY: Tránh lỗi LazyInit khi in log/debug
+    @EqualsAndHashCode.Exclude // Nên thêm cả cái này để tối ưu hiệu năng
+    private List<ChatMessage> messages;
+
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @Column(name = "updated_at")
     @Builder.Default
     private LocalDateTime updatedAt = LocalDateTime.now();
-
 }
