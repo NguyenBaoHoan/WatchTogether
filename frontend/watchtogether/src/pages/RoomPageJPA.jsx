@@ -5,7 +5,8 @@ import VideoPlayer from '../components/VideoPlayer'; // Đảm bảo đường d
 import ChatBox from '../components/ChatBox'; // Đảm bảo đường dẫn đúng
 import { ToastContainer, toast } from 'react-toastify';
 import { useAuth } from '../hooks/useAuth';
-
+import {apiClient} from '../services/apiService';
+import GlassRoomHeader from '../components/GlassRoomHeader';
 const RoomPageJPA = () => {
     // 1. Lấy RoomID từ URL và Username từ state
     const { roomId } = useParams();
@@ -114,21 +115,16 @@ const RoomPageJPA = () => {
         }));
     };
 
-    // --- LOGIC MỚI: FETCH LỊCH SỬ CHAT TỪ DATABASE ---
+    // --- FETCH LỊCH SỬ CHAT TỪ DATABASE ---
     useEffect(() => {
         if (roomId && username) {
             console.log("Fetching chat history for room:", roomId);
-            fetch(`http://localhost:8080/api/chat/history?roomId=${roomId}`)
-                .then(res => {
-                    if (!res.ok) throw new Error("Network response was not ok");
-                    return res.json();
-                })
-                .then(data => {
-                    console.log("Chat history loaded:", data);
-                    setMessages(data); // Nạp toàn bộ tin nhắn cũ vào state
-                })
-                .catch(err => console.error("Failed to fetch chat history:", err));
-        }
+            apiClient.get('/chat/history', {
+                params: { roomId }
+            })
+            .then(res => setMessages(res.data))
+            .catch(err => console.error("Failed to fetch chat history:", err));         
+        }   
     }, [roomId, username]); // Chỉ chạy khi roomId hoặc username có giá trị (lúc mới vào)
 
     // Callback riêng để xử lý thông tin phòng (Host, Video đang phát...)
@@ -258,7 +254,7 @@ const RoomPageJPA = () => {
                             {isConnected ? 'Connected' : 'Connecting...'}
                         </span>
                     </div>
-                    <div>Room: {roomId} | User: {username}</div>
+                    <GlassRoomHeader roomId={roomId} username={username} />
                 </div>
             </nav>
 
@@ -323,7 +319,7 @@ const RoomPageJPA = () => {
                 </div>
 
                 <div className="space-y-4 h-[600px]">
-                    <ChatBox messages={messages} onSendMessage={sendChatMessage} />
+                    <ChatBox messages={messages} onSendMessage={sendChatMessage} currentUser={username} />
                     <div className="bg-white rounded p-4 shadow">
                         <h3 className="font-bold mb-2 text-gray-700">Coming Soon: Queue</h3>
                         <p className="text-sm text-gray-500">Video queue functionality will be implemented here.</p>
