@@ -166,7 +166,7 @@ function JoinPage() {
 
         <button
           type="button"
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/dashboard')}
           className="w-full text-gray-400 p-2 text-sm hover:text-white transition-colors mt-4"
         >
           ← Quay lại Dashboard

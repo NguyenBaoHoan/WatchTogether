@@ -29,20 +29,20 @@ const GlassRoomHeader = ({ roomId, username }) => {
 
     return (
         <div className="relative group">
-            {/* 1. GIẢM GLOW VÀ ĐỔI TONE MÀU: Chuyển sang Blue/Cyan cho hợp với #162541 */}
+            {/* 1. GIẢM GLOW VÀ ĐỔI TONE MÀU: Chuyển sang Blue/Cyan cho hợp với #1E2939 */}
             <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full blur opacity-20 group-hover:opacity-60 transition duration-500"></div>
 
             {/* 2. THU GỌN KÍCH THƯỚC:
                 - Giảm padding: px-4 py-1.5 (cũ là px-6 py-3)
-                - Background: Dùng chính màu theme #162541 có độ trong suốt
+                - Background: Dùng chính màu theme #1E2939 có độ trong suốt
             */}
-            <div className="relative flex items-center gap-3 bg-[#162541]/80 backdrop-blur-md border border-blue-500/30 rounded-full px-4 py-1.5 text-white shadow-lg">
+            <div className="relative flex items-center gap-3 bg-[#1E2939]/80 backdrop-blur-md border border-blue-500/30 rounded-full px-4 py-1.5 text-white shadow-lg">
 
                 {/* Phần User */}
                 <div className="flex items-center gap-2 border-r border-white/10 pr-3">
                     {/* Giảm kích thước Avatar: w-7 h-7 (cũ là w-9 h-9) */}
                     <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 p-[1.5px]">
-                        <div className="w-full h-full rounded-full bg-[#162541] flex items-center justify-center">
+                        <div className="w-full h-full rounded-full bg-[#1E2939] flex items-center justify-center">
                             <span className="text-xs font-bold text-white">
                                 {username.charAt(0).toUpperCase()}
                             </span>
