@@ -8,12 +8,11 @@ import com.watchtogether.Repository.jpa.ChatRepository;
 import com.watchtogether.Repository.jpa.RoomRepository;
 import com.watchtogether.Repository.jpa.UserRepository;
 
-import lombok.AllArgsConstructor;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.handler.annotation.SendTo;
+
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,7 +23,8 @@ import java.util.Optional;
 @Controller
 
 public class ChatController {
-
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
     private ChatRepository chatRepository;
     private final RoomRepository roomRepository;
     private final UserRepository userRepository;
@@ -37,8 +37,11 @@ public class ChatController {
 
     // 1. WebSocket: Nhận tin nhắn -> Lưu DB -> Gửi cho mọi người
     @MessageMapping("/chat.sendMessage")
-    @SendTo("/topic/room/{roomId}/chat")
-    public ChatMessageDTO sendMessage(@Payload ChatMessageDTO dto) {
+    public void sendMessage(@Payload ChatMessageDTO dto) {
+        // prepare data
+        LocalDateTime now = LocalDateTime.now();
+        dto.setTimestamp(now);
+
         ChatMessage entity = new ChatMessage();
         entity.setType(dto.getType());
         entity.setContent(dto.getContent());
@@ -53,21 +56,18 @@ public class ChatController {
         // 2. Tìm User từ DB (Dựa vào tên hoặc logic Auth của bạn)
         // LƯU Ý: Nếu app cho phép Guest (không cần login), bước này sẽ khó.
         // Nếu Guest: sender trong DB sẽ là null, chỉ có senderName.
+        // 3. Tìm User (nếu có)
         Optional<User> userOpt = userRepository.findByName(dto.getSender());
-        if (userOpt.isPresent()) {
-            entity.setSender(userOpt.get());
-        }
+        userOpt.ifPresent(entity::setSender);
 
         // 3. Lưu vào DB
-        chatRepository.save(entity);
-
-        // 4. Trả về DTO (để Frontend không bị lỗi cấu trúc)
-        return dto;
+        String destination = "/topic/room/" + dto.getRoomId() + "/chat";
+        messagingTemplate.convertAndSend(destination, dto);
     }
 
     // 2. REST API: Lấy lịch sử chat khi mới vào phòng
-    // Client sẽ gọi: GET /api/chat/history?roomId=XYZ
-    @GetMapping("/api/chat/history")
+    // Client sẽ gọi: GET /api/v1/chat/history?roomId=XYZ
+    @GetMapping("/api/v1/chat/history")
     @ResponseBody // Trả về JSON
     public List<ChatMessageDTO> getChatHistory(@RequestParam String roomId) {
         // Lấy Entity từ DB -> Convert sang DTO -> Trả về
@@ -79,6 +79,7 @@ public class ChatController {
                     dto.setContent(msg.getContent());
                     dto.setSender(msg.getSenderName()); // Lấy tên backup
                     dto.setRoomId(msg.getRoom().getRoomId());
+                    dto.setTimestamp(msg.getTimestamp());
                     return dto;
                 })
                 .toList();

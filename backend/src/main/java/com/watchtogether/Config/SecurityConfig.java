@@ -55,7 +55,7 @@ public class SecurityConfig {
 
                                                 // /account cần access token
                                                 .requestMatchers("/api/v1/auth/account").authenticated()
-                                                .anyRequest().authenticated())
+                                                .anyRequest().permitAll())
 
                                 // Cấu hình không tạo session, vì mỗi request sẽ gửi kèm JWT (stateless).
                                 .sessionManagement(session -> session
