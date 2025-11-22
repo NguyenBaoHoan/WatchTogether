@@ -8,26 +8,16 @@
  * - Giao diện hiện đại, responsive
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useRoom } from '../hooks/useRoom';
-
+import RoomHistoryList from '../components/dashboard/RoomHistoryList';
 const DashboardPage = () => {
     const navigate = useNavigate();
     const { user, logout } = useAuth();
-    const {  isLoading } = useRoom();
+    const { isLoading } = useRoom();
 
-    // State quản lý lịch sử phòng (mock data - sau này sẽ fetch từ API)
-    const [roomHistory] = useState([
-        {
-            id: 'room-1',
-            name: 'Phòng Tạm Thời',
-            createdAt: new Date().toISOString(),
-            participants: 1,
-            isActive: true,
-        }
-    ]);
 
     // Xử lý tạo phòng mới
     const handleCreateRoom = async () => {
@@ -49,10 +39,6 @@ const DashboardPage = () => {
         }
     };
 
-    // Xử lý vào phòng từ lịch sử
-    const handleJoinRoom = (roomId) => {
-        navigate(`/room/${roomId}`);
-    };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
@@ -65,12 +51,12 @@ const DashboardPage = () => {
                             <div className="flex items-center space-x-2">
                                 <span className="text-3xl font-bold text-yellow-400">WatchTogether</span>
                             </div>
-                            
+
                         </div>
 
                         {/* User Info & Actions */}
                         <div className="flex items-center space-x-4">
-                            
+
 
                             {/* User Menu */}
                             <div className="flex items-center space-x-3">
@@ -147,78 +133,8 @@ const DashboardPage = () => {
                     </div>
                 </div>
 
-                {/* Room History List */}
-                <div className="space-y-4">
-                    {roomHistory.length === 0 ? (
-                        // Empty State
-                        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-12 text-center">
-                            <div className="inline-block p-4 bg-gray-700 rounded-full mb-4">
-                                <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                                </svg>
-                            </div>
-                            <h3 className="text-xl font-semibold text-white mb-2">Chưa có lịch sử phòng</h3>
-                            <p className="text-gray-400">Tạo phòng mới để bắt đầu xem video cùng bạn bè!</p>
-                        </div>
-                    ) : (
-                        // Room Cards
-                        roomHistory.map((room) => (
-                            <div
-                                key={room.id}
-                                className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6 hover:border-blue-500 transition-all duration-200 group"
-                            >
-                                <div className="flex items-center justify-between">
-                                    {/* Room Info */}
-                                    <div className="flex items-center space-x-4 flex-1">
-                                        {/* Icon */}
-                                        <div className="p-3 bg-gray-700 group-hover:bg-blue-600 rounded-lg transition-colors duration-200">
-                                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                        </div>
-
-                                        {/* Details */}
-                                        <div className="flex-1">
-                                            <h3 className="text-lg font-semibold text-white mb-1">{room.name}</h3>
-                                            <div className="flex items-center space-x-4 text-sm text-gray-400">
-                                                <span className="flex items-center space-x-1">
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                                    </svg>
-                                                    <span>{room.participants} người</span>
-                                                </span>
-                                                <span>•</span>
-                                                <span>{new Date(room.createdAt).toLocaleDateString('vi-VN')}</span>
-                                                {room.isActive && (
-                                                    <>
-                                                        <span>•</span>
-                                                        <span className="text-green-400 font-semibold">● Đang hoạt động</span>
-                                                    </>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Action Button */}
-                                    <button
-                                        onClick={() => handleJoinRoom(room.id)}
-                                        className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200"
-                                    >
-                                        <span>Vào Phòng</span>
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
-
-                {/* Footer Info */}
-                <div className="mt-8 text-center text-gray-500 text-sm">
-                    <p>Lịch sử phòng được lưu trong 30 ngày</p>
-                </div>
+                {/* Thay thế toàn bộ phần Room History List cũ bằng Component mới */}
+                <RoomHistoryList user={user} />
             </main>
         </div>
     );
