@@ -1,12 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useWebSocket } from '../hooks/useWebsocket'; // Đảm bảo đường dẫn đúng
-import VideoPlayer from '../components/VideoPlayer'; // Đảm bảo đường dẫn đúng
-import ChatBox from '../components/ChatBox'; // Đảm bảo đường dẫn đúng
+import VideoPlayer from '../components/roomJPA/VideoPlayer'; // Đảm bảo đường dẫn đúng
+import ChatBox from '../components/roomJPA/ChatBox'; // Đảm bảo đường dẫn đúng
 import { ToastContainer, toast } from 'react-toastify';
 import { useAuth } from '../hooks/useAuth';
-import {apiClient} from '../services/apiService';
-import GlassRoomHeader from '../components/GlassRoomHeader';
+import { apiClient } from '../services/apiService';
+import GlassRoomHeader from '../components/roomJPA/GlassRoomHeader';
+import RoomTabs from '../components/roomJPA/RoomTab';
+import RoomMembers from '../components/roomJPA/RoomMembers';
+import PopularVideos from '../components/roomJPA/PopularVideos';
 const RoomPageJPA = () => {
     // 1. Lấy RoomID từ URL và Username từ state
     const { roomId } = useParams();
@@ -35,6 +38,7 @@ const RoomPageJPA = () => {
             navigate('/join', { state: { targetRoomId: roomId } });
         }
     }, [username, user, isLoading, navigate, roomId]);
+    const [activeTab, setActiveTab] = useState('chat');
     // --- TOÀN BỘ LOGIC STATE VÀ HÀM TỪ APP.JSX CŨ ---
     // Room State
     const [messages, setMessages] = useState([]);
@@ -122,9 +126,9 @@ const RoomPageJPA = () => {
             apiClient.get('/chat/history', {
                 params: { roomId }
             })
-            .then(res => setMessages(res.data))
-            .catch(err => console.error("Failed to fetch chat history:", err));         
-        }   
+                .then(res => setMessages(res.data))
+                .catch(err => console.error("Failed to fetch chat history:", err));
+        }
     }, [roomId, username]); // Chỉ chạy khi roomId hoặc username có giá trị (lúc mới vào)
 
     // Callback riêng để xử lý thông tin phòng (Host, Video đang phát...)
@@ -176,47 +180,55 @@ const RoomPageJPA = () => {
             sendVideoAction(type, videoState.videoId, currentTime);
         }
     };
-
+    // ------------------------ CHANGE VIDEO ------------------------
+    // 1. Hàm tách ID YouTube
     const getYouTubeID = (url) => {
-        // Regex để bắt ID từ các dạng link:
-        // - youtube.com/watch?v=ID
-        // - youtu.be/ID
-        // - youtube.com/embed/ID
         const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
         const match = url.match(regExp);
         return (match && match[2].length === 11) ? match[2] : null;
     };
 
-    const handleChangeVideo = () => {
-        if (!inputVideoId.trim()) {
-            toast.warning("Vui lòng nhập link YouTube!");
-            return;
+    // 2. HÀM TRUNG TÂM: performVideoChange
+    // Hàm này chịu trách nhiệm thay đổi video, bất kể nguồn gốc lệnh gọi (Input hay List)
+    const performVideoChange = (newVideoId) => {
+        console.log("Thực hiện đổi video sang ID:", newVideoId);
+        
+        // Logic kiểm tra Host/Sync để quyết định gửi lệnh hay chỉ đổi local
+        if (isSynced || isHost) {
+            // Case 1: Đổi cho cả phòng
+            sendVideoAction('CHANGE_VIDEO', newVideoId, 0);
+            toast.success("Đã đổi video phòng thành công!");
+        } else {
+            // Case 2: Chỉ đổi máy mình
+            setVideoState(prev => ({
+                ...prev,
+                videoId: newVideoId,
+                isPlaying: false,
+                timestamp: 0
+            }));
+            toast.success("Đã đổi video local thành công!");
         }
-        // Thử tách ID từ link
+    };
+
+    // 3. Xử lý nút "Change Video" (Ô nhập liệu)
+    const handleChangeVideo = () => {
+        if (!inputVideoId.trim()) return toast.warning("Nhập link đi bạn ơi!");
+        
         const extractedId = getYouTubeID(inputVideoId);
         if (extractedId) {
-            if (isSynced || isHost) {
-                // TRƯỜNG HỢP 1: Đã Sync hoặc là Host -> Gửi lệnh cho cả phòng
-                sendVideoAction('CHANGE_VIDEO', extractedId, 0);
-                toast.success("Đã đổi video phòng thành công!");
-            } else {
-                // TRƯỜNG HỢP 2: Chưa Sync và là Guest -> Chỉ đổi local
-                setVideoState(prev => ({
-                    ...prev,
-                    videoId: extractedId,
-                    isPlaying: false,
-                    timestamp: 0
-                }));
-                toast.success("Đã đổi video local thành công!");
-
-            }
-            // Reset ô input
-            setInputVideoId('');
+            performVideoChange(extractedId); // <-- GỌI HÀM CHUNG
+            setInputVideoId(''); 
         } else {
-            // Nếu link sai -> Báo lỗi, KHÔNG GỬI, KHÔNG CRASH
-            toast.error("Link YouTube không hợp lệ! Vui lòng kiểm tra lại.");
-            console.error("Invalid URL:", inputVideoId);
+            toast.error("Link YouTube lỗi rồi!");
         }
+    };
+
+    // 4. Xử lý click vào Card (Danh sách Popular)
+    const handleSelectFromList = (videoId) => {
+        performVideoChange(videoId); // <-- GỌI HÀM CHUNG (Y hệt bên trên)
+        
+        // Bonus: Cuộn lên đầu trang cho người dùng xem
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
     const handleSync = () => {
         if (!isConnected) {
@@ -241,7 +253,6 @@ const RoomPageJPA = () => {
         }
     };
 
-    // (Thêm text-white để đọc được trên nền tối)
     return (
         <div className="min-h-screen text-white">
             <ToastContainer position="top-right" autoClose={3000} />
@@ -260,6 +271,7 @@ const RoomPageJPA = () => {
 
             <div className="container mx-auto p-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 space-y-4">
+                    {/* --- CỘT TRÁI: VIDEO PLAYER --- */}
                     <div className="bg-white p-3 rounded-lg shadow flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -316,13 +328,36 @@ const RoomPageJPA = () => {
                             <p>Bạn đang ở chế độ chờ. Hãy bấm nút <b>SYNC</b> màu đỏ để bắt đầu xem cùng mọi người.</p>
                         </div>
                     )}
+                    {/* --- DANH SÁCH VIDEO PHỔ BIẾN --- */}
+                    <PopularVideos onVideoSelect={handleSelectFromList} />
                 </div>
 
-                <div className="space-y-4 h-[600px]">
-                    <ChatBox messages={messages} onSendMessage={sendChatMessage} currentUser={username} />
-                    <div className="bg-white rounded p-4 shadow">
-                        <h3 className="font-bold mb-2 text-gray-700">Coming Soon: Queue</h3>
-                        <p className="text-sm text-gray-500">Video queue functionality will be implemented here.</p>
+                {/* --- CỘT PHẢI: TABS & CONTENT --- */}
+                <div className="h-[600px] flex flex-col bg-[#1E2939] rounded-lg shadow-lg overflow-hidden border border-gray-700">
+
+                    {/* 1. Thanh Tabs */}
+                    <RoomTabs activeTab={activeTab} onTabChange={setActiveTab} />
+
+                    {/* 2. Nội dung thay đổi theo Tab */}
+                    <div className="flex-1 overflow-hidden relative bg-[#1E2939]">
+                        {activeTab === 'chat' && (
+                            // Wrapper div màu trắng để chứa ChatBox (vì ChatBox của bạn thiết kế nền sáng)
+                            <div className="h-full bg-white">
+                                <ChatBox
+                                    messages={messages}
+                                    onSendMessage={sendChatMessage}
+                                    currentUser={username}
+                                />
+                            </div>
+                        )}
+
+                        {activeTab === 'members' && (
+                            // Component Members đã được thiết kế tối màu sẵn
+                            <RoomMembers
+                                hostName={hostName}
+                                currentUser={username}
+                            />
+                        )}
                     </div>
                 </div>
             </div>
