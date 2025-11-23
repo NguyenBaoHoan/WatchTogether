@@ -29,7 +29,8 @@ public class Room {
     private int currPlayer = 0;
     private String currentVideoId = "M7lc1UVf-VE";
     private boolean isPlaying = false;
-
+    @Column(name = "online_count")
+    private Integer onlineCount = 0;
     @Column(name = "current_time_value")
     private double currentTime = 0.0;
 
@@ -61,7 +62,9 @@ public class Room {
         participants.remove(participant);
         participant.setRoom(null);
     }
+
     public String getHostName() {
         return host != null ? host.getName() : null;
     }
+
 }
