@@ -10,6 +10,8 @@ import GlassRoomHeader from '../components/roomJPA/GlassRoomHeader';
 import RoomTabs from '../components/roomJPA/RoomTab';
 import RoomMembers from '../components/roomJPA/RoomMembers';
 import PopularVideos from '../components/roomJPA/PopularVideos';
+import RoomSidebar from '../components/roomJPA/RoomSidebar';
+import InviteModal from '../components/roomJPA/InviteModel';
 const RoomPageJPA = () => {
     // 1. Lấy RoomID từ URL và Username từ state
     const { roomId } = useParams();
@@ -50,13 +52,17 @@ const RoomPageJPA = () => {
     const [inputVideoId, setInputVideoId] = useState('');
     const playerInstanceRef = useRef(null);
 
+
     // 1. State mới: Xác định đã bấm Sync chưa và có phải Host không
     const [isSynced, setIsSynced] = useState(false); // Mặc định là CHƯA Sync
     const [isHost, setIsHost] = useState(false);
     const [hostName, setHostName] = useState('');
     // Đánh dấu đang "chờ" phản hồi sync
     const [isWaitingForSync, setIsWaitingForSync] = useState(false);
-    // 2. TẠO MỘT REF ĐỂ LƯU STATE MỚI NHẤT
+
+    const [participants, setParticipants] = useState([]);
+    const [roomName, setRoomName] = useState('Đang tải...');
+    //  TẠO MỘT REF ĐỂ LƯU STATE MỚI NHẤT
     // Ref này sẽ giúp các callback (như handleVideoAction) luôn đọc được giá trị mới
     const stateRef = useRef({
         isHost: false,
@@ -64,7 +70,7 @@ const RoomPageJPA = () => {
         videoId: videoState.videoId,
         isWaitingForSync: false // Thêm vào ref
     });
-
+    const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     // 3. CẬP NHẬT REF MỖI KHI STATE THAY ĐỔI
     useEffect(() => {
         stateRef.current = {
@@ -135,6 +141,9 @@ const RoomPageJPA = () => {
     const handleRoomInfo = (roomData) => {
         console.log("Received Room Info:", roomData);
 
+        if (roomData.roomName) {
+            setRoomName(roomData.roomName);
+        }
         // 1. Cập nhật Host Name
         if (roomData.hostName) {
             setHostName(roomData.hostName);
@@ -161,17 +170,23 @@ const RoomPageJPA = () => {
     };
     // Callback riêng để xử lý Chat
     const handleChatMessage = (msg) => {
-        // Chỉ thêm tin nhắn vào list
-        setMessages(prev => [...prev, msg]);
+        if (msg.type === 'JOIN') toast.info(`${msg.sender} đã vào phòng`);
+        if (msg.type === 'LEAVE') toast.warning(`${msg.sender} đã rời phòng`);
+        if (msg.type === 'CHAT') setMessages(prev => [...prev, msg]);
     };
 
+    const handleUpdateMembers = (membersList) => {
+        console.log("Updated members list:", membersList);
+        setParticipants(membersList);
+    }
     // Hook khởi tạo kết nối
     const { isConnected, sendVideoAction, sendChatMessage } = useWebSocket(
         roomId,
         username,
         handleVideoAction,
         handleChatMessage,
-        handleRoomInfo
+        handleRoomInfo,
+        handleUpdateMembers
     );
 
     const onPlayerStateChange = (type, currentTime) => {
@@ -192,7 +207,7 @@ const RoomPageJPA = () => {
     // Hàm này chịu trách nhiệm thay đổi video, bất kể nguồn gốc lệnh gọi (Input hay List)
     const performVideoChange = (newVideoId) => {
         console.log("Thực hiện đổi video sang ID:", newVideoId);
-        
+
         // Logic kiểm tra Host/Sync để quyết định gửi lệnh hay chỉ đổi local
         if (isSynced || isHost) {
             // Case 1: Đổi cho cả phòng
@@ -213,11 +228,11 @@ const RoomPageJPA = () => {
     // 3. Xử lý nút "Change Video" (Ô nhập liệu)
     const handleChangeVideo = () => {
         if (!inputVideoId.trim()) return toast.warning("Nhập link đi bạn ơi!");
-        
+
         const extractedId = getYouTubeID(inputVideoId);
         if (extractedId) {
             performVideoChange(extractedId); // <-- GỌI HÀM CHUNG
-            setInputVideoId(''); 
+            setInputVideoId('');
         } else {
             toast.error("Link YouTube lỗi rồi!");
         }
@@ -226,7 +241,7 @@ const RoomPageJPA = () => {
     // 4. Xử lý click vào Card (Danh sách Popular)
     const handleSelectFromList = (videoId) => {
         performVideoChange(videoId); // <-- GỌI HÀM CHUNG (Y hệt bên trên)
-        
+
         // Bonus: Cuộn lên đầu trang cho người dùng xem
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -253,11 +268,21 @@ const RoomPageJPA = () => {
         }
     };
 
-    return (
-        <div className="min-h-screen text-white">
-            <ToastContainer position="top-right" autoClose={3000} />
 
-            <nav className="bg-gray-800 text-white p-4 shadow-md">
+    const handleInvite = () => {
+        setIsInviteModalOpen(true);
+    };
+
+    return (
+        <div className="min-h-screen text-white flex flex-col">
+            <ToastContainer position="top-right" autoClose={3000} />
+            <InviteModal
+                isOpen={isInviteModalOpen}
+                onClose={() => setIsInviteModalOpen(false)}
+                inviteLink={window.location.href} // Truyền link hiện tại vào modal
+            />
+            {/* Navbar */}
+            <nav className="bg-gray-800 text-white p-4 shadow-md z-10 sticky top-0">
                 <div className="container mx-auto flex justify-between items-center">
                     <div className="text-xl font-bold flex items-center gap-2">
                         <span>WatchTogether</span>
@@ -265,99 +290,106 @@ const RoomPageJPA = () => {
                             {isConnected ? 'Connected' : 'Connecting...'}
                         </span>
                     </div>
-                    <GlassRoomHeader roomId={roomId} username={username} />
+                    <GlassRoomHeader roomId={roomId} username={username} roomName={roomName} />
                 </div>
             </nav>
 
-            <div className="container mx-auto p-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 space-y-4">
-                    {/* --- CỘT TRÁI: VIDEO PLAYER --- */}
-                    <div className="bg-white p-3 rounded-lg shadow flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                            <span className="text-lg font-semibold text-gray-700">
-                                Current Host: <span className="text-blue-600 font-bold">{hostName}</span>
-                            </span>
-                        </div>
-                        {isHost && (
-                            <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded border border-green-400">
-                                You are the Host
-                            </span>
-                        )}
-                    </div>
+            {/* CONTAINER FLEX: Sửa lỗi khoảng đen ở đây */}
+            <div className="flex flex-1 overflow-hidden">
 
-                    <VideoPlayer
-                        videoId={videoState.videoId}
-                        isPlaying={isSynced ? videoState.isPlaying : false}
-                        timestamp={videoState.timestamp}
-                        onStateChange={onPlayerStateChange}
-                        onPlayerInstance={(player) => { playerInstanceRef.current = player; }}
-                    />
-
-                    <div className="bg-white p-4 rounded shadow flex flex-wrap gap-4 items-center">
-                        <div className="flex-1 flex gap-2">
-                            <input
-                                className="flex-1 border p-2 rounded text-black" // Thêm text-black
-                                placeholder="Paste YouTube ID (e.g. M7lc1UVf-VE)"
-                                value={inputVideoId}
-                                onChange={(e) => setInputVideoId(e.target.value)}
-                            />
-                            <button
-                                onClick={handleChangeVideo}
-                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                            >
-                                Change Video
-                            </button>
-                        </div>
-                        <button
-                            onClick={handleSync}
-                            disabled={!isConnected}
-                            className={`px-6 py-2 rounded text-white font-bold transition-colors ${!isSynced
-                                ? 'bg-red-500 hover:bg-red-600 animate-pulse'
-                                : 'bg-green-500 hover:bg-green-600'
-                                }`}
-                        >
-                            {!isSynced ? "BẤM ĐỂ SYNC" : "Resync"}
-                        </button>
-                    </div>
-
-                    {!isSynced && (
-                        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4" role="alert">
-                            <p className="font-bold">Chào mừng {username}!</p>
-                            <p>Bạn đang ở chế độ chờ. Hãy bấm nút <b>SYNC</b> màu đỏ để bắt đầu xem cùng mọi người.</p>
-                        </div>
-                    )}
-                    {/* --- DANH SÁCH VIDEO PHỔ BIẾN --- */}
-                    <PopularVideos onVideoSelect={handleSelectFromList} />
+                {/* 1. SIDEBAR: Đã sửa w-64 thành w-auto và bỏ màu nền đen */}
+                <div className="w-auto flex-shrink-0 hidden md:block border-r border-gray-700/30">
+                    <RoomSidebar onInvite={handleInvite} />
                 </div>
 
-                {/* --- CỘT PHẢI: TABS & CONTENT --- */}
-                <div className="h-[600px] flex flex-col bg-[#1E2939] rounded-lg shadow-lg overflow-hidden border border-gray-700">
+                {/* 2. NỘI DUNG CHÍNH */}
+                <div className="flex-1 overflow-y-auto p-4">
+                    <div className="container mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                    {/* 1. Thanh Tabs */}
-                    <RoomTabs activeTab={activeTab} onTabChange={setActiveTab} />
-
-                    {/* 2. Nội dung thay đổi theo Tab */}
-                    <div className="flex-1 overflow-hidden relative bg-[#1E2939]">
-                        {activeTab === 'chat' && (
-                            // Wrapper div màu trắng để chứa ChatBox (vì ChatBox của bạn thiết kế nền sáng)
-                            <div className="h-full bg-white">
-                                <ChatBox
-                                    messages={messages}
-                                    onSendMessage={sendChatMessage}
-                                    currentUser={username}
-                                />
+                        <div className="lg:col-span-2 space-y-4">
+                            {/* --- VIDEO PLAYER --- */}
+                            <div className="bg-white p-3 rounded-lg shadow flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                                    <span className="text-lg font-semibold text-gray-700">
+                                        Current Host: <span className="text-blue-600 font-bold">{hostName}</span>
+                                    </span>
+                                </div>
+                                {isHost && (
+                                    <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded border border-green-400">
+                                        You are the Host
+                                    </span>
+                                )}
                             </div>
-                        )}
 
-                        {activeTab === 'members' && (
-                            // Component Members đã được thiết kế tối màu sẵn
-                            <RoomMembers
-                                hostName={hostName}
-                                currentUser={username}
+                            <VideoPlayer
+                                videoId={videoState.videoId}
+                                isPlaying={isSynced ? videoState.isPlaying : false}
+                                timestamp={videoState.timestamp}
+                                onStateChange={onPlayerStateChange}
+                                onPlayerInstance={(player) => { playerInstanceRef.current = player; }}
                             />
-                        )}
+
+                            <div className="bg-white p-4 rounded shadow flex flex-wrap gap-4 items-center">
+                                <div className="flex-1 flex gap-2">
+                                    <input
+                                        className="flex-1 border p-2 rounded text-black"
+                                        placeholder="Paste YouTube ID (e.g. M7lc1UVf-VE)"
+                                        value={inputVideoId}
+                                        onChange={(e) => setInputVideoId(e.target.value)}
+                                    />
+                                    <button
+                                        onClick={handleChangeVideo}
+                                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                    >
+                                        Change Video
+                                    </button>
+                                </div>
+                                <button
+                                    onClick={handleSync}
+                                    disabled={!isConnected}
+                                    className={`px-6 py-2 rounded text-white font-bold transition-colors ${!isSynced
+                                        ? 'bg-red-500 hover:bg-red-600 animate-pulse'
+                                        : 'bg-green-500 hover:bg-green-600'
+                                        }`}
+                                >
+                                    {!isSynced ? "BẤM ĐỂ SYNC" : "Resync"}
+                                </button>
+                            </div>
+
+                            {!isSynced && (
+                                <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4" role="alert">
+                                    <p className="font-bold">Chào mừng {username}!</p>
+                                    <p>Bạn đang ở chế độ chờ. Hãy bấm nút <b>SYNC</b> màu đỏ để bắt đầu xem cùng mọi người.</p>
+                                </div>
+                            )}
+
+                            <PopularVideos onVideoSelect={handleSelectFromList} />
+                        </div>
+
+                        {/* --- CỘT PHẢI: CHAT --- */}
+                        <div className="h-[600px] flex flex-col bg-[#1E2939] rounded-lg shadow-lg overflow-hidden border border-gray-700">
+                            <RoomTabs activeTab={activeTab} onTabChange={setActiveTab} />
+                            <div className="flex-1 overflow-hidden relative bg-[#1E2939]">
+                                {activeTab === 'chat' && (
+                                    <div className="h-full bg-white">
+                                        <ChatBox
+                                            messages={messages}
+                                            onSendMessage={sendChatMessage}
+                                            currentUser={username}
+                                        />
+                                    </div>
+                                )}
+                                {activeTab === 'members' && (
+                                    <RoomMembers
+                                        hostName={hostName}
+                                        participants={participants}
+                                        currentUser={username}
+                                    />
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
