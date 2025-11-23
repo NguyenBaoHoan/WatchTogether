@@ -22,7 +22,7 @@ const RoomHistoryList = ({ user }) => {
                 id: room.roomId,
                 name: room.roomName || `Phòng ${room.roomId.substring(0, 6)}...`,
                 createdAt: room.createdAt,
-                participants: room.participants ? room.participants.length : 0,
+                onlineCount: room.onlineCount || 0,
                 isActive: true // Logic check active tùy backend
             }));
 
