@@ -40,9 +40,6 @@
 - 🗃️ **Store temporary rooms** in **Redis** (TTL 24h)
 - 👤 **Save Host (participant)** into **PostgreSQL**
 - 🔑 **JWT** for authenticating actions
-- 🔍 **Test endpoints**:
-  - `GET /hello` → test API
-  - `GET /db-check` → test DB connection
 
 ### 🔮 Upcoming
 - 🔗 Join room using `inviteCode`
@@ -55,11 +52,3 @@
 
 ## 📂 Project Structure
 
-```bash
-WatchTogether/
-├── backend/        # Spring Boot (API, DB, Redis, JWT, WebSocket)
-│   ├── src/main/java/com/watchtogether/
-│   └── src/main/resources/
-└── frontend/       # React + Vite + Tailwind (UI)
-    ├── src/
-    └── public/
