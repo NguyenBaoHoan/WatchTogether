@@ -4,18 +4,22 @@ import SockJS from 'sockjs-client';
 
 const SOCKET_URL = 'http://localhost:8080/ws';
 
-export const useWebSocket = (roomId, username, onVideoAction, onChatMessage,onRoomInfo) => {
+export const useWebSocket = (roomId, username, onVideoAction, onChatMessage, onRoomInfo, onUpdateMembers) => {
     const stompClientRef = useRef(null);
     const [isConnected, setIsConnected] = useState(false);
     // Dùng ref để lưu callback, tránh re-connect lặp vô tận
     const onVideoActionRef = useRef(onVideoAction);
     const onChatMessageRef = useRef(onChatMessage);
     const onRoomInfoRef = useRef(onRoomInfo); // Thêm ref
+
+    const onUpdateMembersRef = useRef(onUpdateMembers); // MỚI
+
     useEffect(() => {
         onVideoActionRef.current = onVideoAction;
         onChatMessageRef.current = onChatMessage;
         onRoomInfoRef.current = onRoomInfo;
-    }, [onVideoAction, onChatMessage,onRoomInfo]);
+        onUpdateMembersRef.current = onUpdateMembers;
+    }, [onVideoAction, onChatMessage, onRoomInfo, onUpdateMembers]);
     useEffect(() => {
         if (!roomId || !username) return;
 
@@ -32,6 +36,11 @@ export const useWebSocket = (roomId, username, onVideoAction, onChatMessage,onRo
                     destination: `/app/room/${roomId}/join`,
                     body: username
                 });
+                // 2. Gửi lệnh đăng ký thành viên Redis (gửi tới ParticipantWebSocket)
+                client.publish({
+                    destination: `/app/room/${roomId}/register`, // <--- PATH MỚI
+                    body: username
+                });
 
                 // 2. Lắng nghe lệnh điều khiển Video (Play/Pause/Sync)
                 client.subscribe(`/topic/room/${roomId}/video`, (message) => {
@@ -39,6 +48,7 @@ export const useWebSocket = (roomId, username, onVideoAction, onChatMessage,onRo
                         onVideoActionRef.current(JSON.parse(message.body));
                     }
                 });
+                
 
                 // 3. Lắng nghe Chat
                 client.subscribe(`/topic/room/${roomId}/chat`, (message) => {
@@ -56,6 +66,11 @@ export const useWebSocket = (roomId, username, onVideoAction, onChatMessage,onRo
                         onRoomInfoRef.current(roomInfo); // Gọi callback mới
                     }
                 });
+                client.subscribe(`/topic/room/${roomId}/members`, (msg) => {
+                    if (onUpdateMembersRef.current) {
+                        onUpdateMembersRef.current(JSON.parse(msg.body));
+                    }
+                })
             },
             onDisconnect: () => {
                 setIsConnected(false);
@@ -106,7 +121,7 @@ export const useWebSocket = (roomId, username, onVideoAction, onChatMessage,onRo
             const payload = {
                 type: "CHAT",
                 content: content,
-                sender: username, 
+                sender: username,
                 roomId: roomId
             };
             try {
