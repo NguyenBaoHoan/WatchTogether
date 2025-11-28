@@ -10,7 +10,7 @@ const ChatBox = ({ messages, onSendMessage, currentUser }) => {
     };
 
     useEffect(() => {
-        // scrollToBottom();
+        scrollToBottom();
     }, [messages]);
 
     const handleSubmit = (e) => {
