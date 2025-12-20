@@ -1,13 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 // Component icon đơn giản (có thể thay thế bằng lucide-react hoặc heroicons nếu dự án đã có)
 const IconWrapper = ({ children }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{children}</svg>;
 
-const RoomSidebar = ({ onInvite }) => {
-    // State giả lập cho Mic/Camera/Screen để có hiệu ứng click
-    const [micOn, setMicOn] = useState(false);
-    const [camOn, setCamOn] = useState(false);
-    const [screenOn, setScreenOn] = useState(false);
+const RoomSidebar = ({ onInvite, onVoiceChat, onVideoCall, micOn, camOn }) => {
 
     const SidebarItem = ({ icon, label, active, onClick, colorClass = "text-gray-400 group-hover:text-white" }) => (
         <button
@@ -38,30 +34,23 @@ const RoomSidebar = ({ onInvite }) => {
             </div>
 
             {/* Media Controls Group */}
-            <div className="flex flex-col w-full my-4 gap-2 bg-gray-900/50 py-2 rounded-lg mx-1 w-[90%]">
+            <div className="flex flex-col w-[90%] my-4 gap-2 bg-gray-900/50 py-2 rounded-lg mx-1">
                 <SidebarItem
-                    label="Camera"
+                    label="Video"
                     active={camOn}
-                    onClick={() => setCamOn(!camOn)}
+                    onClick={onVideoCall}
                     colorClass={camOn ? "text-green-500" : "text-gray-400"}
                     icon={<IconWrapper><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></IconWrapper>}
                 />
 
                 <SidebarItem
-                    label="Mic"
+                    label="Voice"
                     active={micOn}
-                    onClick={() => setMicOn(!micOn)}
+                    onClick={onVoiceChat}
                     colorClass={micOn ? "text-green-500" : "text-gray-400"}
                     icon={<IconWrapper><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" /></IconWrapper>}
                 />
 
-                <SidebarItem
-                    label="Screen"
-                    active={screenOn}
-                    onClick={() => setScreenOn(!screenOn)}
-                    colorClass={screenOn ? "text-blue-500" : "text-gray-400"}
-                    icon={<IconWrapper><rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></IconWrapper>}
-                />
                 <SidebarItem
                     label="Help"
                     icon={<IconWrapper><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" /></IconWrapper>}

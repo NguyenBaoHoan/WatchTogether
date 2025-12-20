@@ -1,1 +1,19 @@
 @import "tailwindcss";
+
+/* ============================================
+   ZEGO SDK - Ẩn thanh toolbar để gọn gàng hơn
+   ============================================ */
+
+/* Container chính */
+.voice-chat-container {
+    overflow: hidden !important;
+    position: relative;
+}
+
+/* Ẩn thanh toolbar bottom (nút đỏ) nếu muốn gọn */
+/* Bỏ comment nếu muốn ẩn hoàn toàn toolbar */
+/*
+.voice-chat-container [class*="ZegoRoom"] > div:last-child {
+    display: none !important;
+}
+*/

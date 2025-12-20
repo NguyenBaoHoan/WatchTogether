@@ -12,6 +12,7 @@ import RoomMembers from '../components/roomJPA/RoomMembers';
 import PopularVideos from '../components/roomJPA/PopularVideos';
 import RoomSidebar from '../components/roomJPA/RoomSidebar';
 import InviteModal from '../components/roomJPA/InviteModel';
+import VoiceChat from '../components/roomJPA/VoiceChat';
 const RoomPageJPA = () => {
     // 1. Lấy RoomID từ URL và Username từ state
     const { roomId } = useParams();
@@ -71,6 +72,11 @@ const RoomPageJPA = () => {
         isWaitingForSync: false // Thêm vào ref
     });
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+
+    // ============ VOICE/VIDEO CHAT STATE ============
+    const [isVoiceChatOpen, setIsVoiceChatOpen] = useState(false);
+    const [voiceChatMode, setVoiceChatMode] = useState('voice'); // 'voice' hoặc 'video'
+    const voiceChatRef = useRef(null);
     // 3. CẬP NHẬT REF MỖI KHI STATE THAY ĐỔI
     useEffect(() => {
         stateRef.current = {
@@ -273,6 +279,24 @@ const RoomPageJPA = () => {
         setIsInviteModalOpen(true);
     };
 
+    // ============ VOICE/VIDEO CHAT HANDLERS ============
+    const handleVoiceChat = () => {
+        setVoiceChatMode('voice');
+        setIsVoiceChatOpen(true);
+        toast.info("🎤 Đang mở Voice Chat...");
+    };
+
+    const handleVideoCall = () => {
+        setVoiceChatMode('video');
+        setIsVoiceChatOpen(true);
+        toast.info("📹 Đang mở Video Call...");
+    };
+
+    const handleCloseVoiceChat = () => {
+        setIsVoiceChatOpen(false);
+        toast.info("Đã thoát khỏi Voice/Video Chat");
+    };
+
     return (
         <div className="min-h-screen text-white flex flex-col">
             <ToastContainer position="top-right" autoClose={3000} />
@@ -281,8 +305,9 @@ const RoomPageJPA = () => {
                 onClose={() => setIsInviteModalOpen(false)}
                 inviteLink={window.location.href} // Truyền link hiện tại vào modal
             />
+
             {/* Navbar */}
-            <nav className="bg-gray-800 text-white p-4 shadow-md z-10 sticky top-0">
+            <nav className="bg-gray-800 text-white p-4 shadow-md z-50 sticky top-0">
                 <div className="container mx-auto flex justify-between items-center">
                     <div className="text-xl font-bold flex items-center gap-2">
                         <span>WatchTogether</span>
@@ -299,7 +324,13 @@ const RoomPageJPA = () => {
 
                 {/* 1. SIDEBAR: Đã sửa w-64 thành w-auto và bỏ màu nền đen */}
                 <div className="w-auto flex-shrink-0 hidden md:block border-r border-gray-700/30">
-                    <RoomSidebar onInvite={handleInvite} />
+                    <RoomSidebar
+                        onInvite={handleInvite}
+                        onVoiceChat={handleVoiceChat}
+                        onVideoCall={handleVideoCall}
+                        micOn={isVoiceChatOpen && voiceChatMode === 'voice'}
+                        camOn={isVoiceChatOpen && voiceChatMode === 'video'}
+                    />
                 </div>
 
                 {/* 2. NỘI DUNG CHÍNH */}
@@ -364,6 +395,16 @@ const RoomPageJPA = () => {
                                     <p>Bạn đang ở chế độ chờ. Hãy bấm nút <b>SYNC</b> màu đỏ để bắt đầu xem cùng mọi người.</p>
                                 </div>
                             )}
+
+                            {/* VOICE/VIDEO CHAT - Nằm giữa video chính và Popular Videos */}
+                            <VoiceChat
+                                ref={voiceChatRef}
+                                roomId={roomId}
+                                username={username}
+                                isVisible={isVoiceChatOpen}
+                                onClose={handleCloseVoiceChat}
+                                mode={voiceChatMode}
+                            />
 
                             <PopularVideos onVideoSelect={handleSelectFromList} />
                         </div>

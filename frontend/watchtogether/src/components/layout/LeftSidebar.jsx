@@ -6,8 +6,8 @@ const sidebarItems = [
     { icon: UserPlus, title: 'Invite', notification: 1, action: 'invite' },
     { icon: Shield, title: 'Permissions' },
     { icon: Settings, title: 'Settings', notification: 1 },
-    { icon: Camera, title: 'Camera' },
-    { icon: Mic, title: 'Microphone' },
+    { icon: Camera, title: 'Camera', action: 'camera' }, 
+    { icon: Mic, title: 'Microphone', action: 'mic' },   
     { icon: MonitorUp, title: 'Screen' },
 ];
 const SidebarItem = ({ icon, title, notification, onClick }) => {
