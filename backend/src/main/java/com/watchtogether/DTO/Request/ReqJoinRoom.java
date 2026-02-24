@@ -7,6 +7,6 @@ import lombok.Data;
 @Builder
 public class ReqJoinRoom {
     private String displayName;
-    // private String inviteCode;
-    // private String role; // "host" hoặc "guest"
+    private String inviteCode;
+    private String role; // "host" hoặc "guest"
 }
