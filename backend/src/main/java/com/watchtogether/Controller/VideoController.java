@@ -29,24 +29,22 @@ public class VideoController {
     // Client gửi: /app/room/{roomId}/join
     @MessageMapping("/room/{roomId}/join")
     @SendTo("/topic/room/{roomId}")
-    // SỬA LỖI TẠI ĐÂY: Thêm ("roomId") vào @DestinationVariable
-    public RoomDTO joinRoom(@DestinationVariable("roomId") String roomId, 
-                            @Payload String username,
-                            SimpMessageHeaderAccessor headerAccessor) {
-        
+    public RoomDTO joinRoom(@DestinationVariable("roomId") String roomId,
+            @Payload String username,
+            SimpMessageHeaderAccessor headerAccessor) {
+
         log.info("REQUEST JOIN ROOM | RoomId: {} | User: {}", roomId, username);
         String sessionId = headerAccessor.getSessionId();
-        
+
         // Lấy Room Entity từ Service
         Room room = roomService.joinRoom(roomId, username, sessionId);
 
         // --- LOG KIỂM TRA HOSTNAME ---
         String hostName = (room.getHost() != null) ? room.getHost().getName() : "NULL";
-        log.info("DEBUG HOST INFO | Room: {} | Host Object: {} | HostName: {}", 
-                 room.getRoomId(), 
-                 (room.getHost() != null ? "EXIST" : "NULL"), 
-                 hostName);
-        // -----------------------------
+        log.info("DEBUG HOST INFO | Room: {} | Host Object: {} | HostName: {}",
+                room.getRoomId(),
+                (room.getHost() != null ? "EXIST" : "NULL"),
+                hostName);
 
         // Convert sang DTO để đảm bảo Frontend nhận được field hostName
         // và tránh lỗi vòng lặp vô tận của Jackson
